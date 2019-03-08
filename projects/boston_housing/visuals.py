@@ -58,7 +58,7 @@ def ModelLearning(X, y):
         ax.set_title('max_depth = %s'%(depth))
         ax.set_xlabel('Number of Training Points')
         ax.set_ylabel('Score')
-        ax.set_xlim([0, X.shape[0]*0.8])
+        ax.set_xlim([0, X.shape[0]*1.8])
         ax.set_ylim([-0.05, 1.05])
 
     # Visual aesthetics
