@@ -42,14 +42,14 @@ import numpy as np
 import seaborn as sb
 import matplotlib.pyplot as plt
 
-import visuals as vs
+#import visuals as vs
 import data_prep as dp
 import json
 from itertools import cycle, islice
 from datetime import datetime
 
 from sklearn.metrics import mean_squared_log_error, mean_squared_error
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LogisticRegression, SGDRegressor, LinearRegression
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -63,6 +63,10 @@ import copy
 
 
 ```
+
+    The autoreload extension is already loaded. To reload it, use:
+      %reload_ext autoreload
+
 
 ## 1. Exploratory data analysis
 
@@ -321,10 +325,10 @@ original_datasets['train'].describe(include='all')
       <td>NaN</td>
       <td>[{'id': 18, 'name': 'Drama'}]</td>
       <td>http://www.transformersmovie.com/</td>
-      <td>tt0186045</td>
+      <td>tt1430132</td>
       <td>en</td>
-      <td>The Three Musketeers</td>
-      <td>Evicted from his squat and suddenly alone on t...</td>
+      <td>Red Dawn</td>
+      <td>During the U.S.-led occupation of Baghdad in 2...</td>
       <td>NaN</td>
       <td>...</td>
       <td>9/10/15</td>
@@ -332,10 +336,10 @@ original_datasets['train'].describe(include='all')
       <td>[{'iso_639_1': 'en', 'name': 'English'}]</td>
       <td>Released</td>
       <td>Based on a true story.</td>
-      <td>Ghost</td>
+      <td>Beauty and the Beast</td>
       <td>[{'id': 10183, 'name': 'independent film'}]</td>
       <td>[]</td>
-      <td>[{'credit_id': '52fe4c639251416c75118f21', 'de...</td>
+      <td>[{'credit_id': '52fe4308c3a36847f8035533', 'de...</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -545,36 +549,230 @@ Some fields contain list with dictionaries. We will need to extract and transfor
 
 
 ```python
-original_datasets['train'].isna().sum()
+desc = pd.DataFrame(original_datasets['train'].isna().sum(), columns=['empty'])
+desc
 ```
 
 
 
 
-    id                          0
-    belongs_to_collection    2396
-    budget                      0
-    genres                      7
-    homepage                 2054
-    imdb_id                     0
-    original_language           0
-    original_title              0
-    overview                    8
-    popularity                  0
-    poster_path                 1
-    production_companies      156
-    production_countries       55
-    release_date                0
-    runtime                     2
-    spoken_languages           20
-    status                      0
-    tagline                   597
-    title                       0
-    Keywords                  276
-    cast                       13
-    crew                       16
-    revenue                     0
-    dtype: int64
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>empty</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>id</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>belongs_to_collection</th>
+      <td>2396</td>
+    </tr>
+    <tr>
+      <th>budget</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>genres</th>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>homepage</th>
+      <td>2054</td>
+    </tr>
+    <tr>
+      <th>imdb_id</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>original_language</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>original_title</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>overview</th>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>popularity</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>poster_path</th>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>production_companies</th>
+      <td>156</td>
+    </tr>
+    <tr>
+      <th>production_countries</th>
+      <td>55</td>
+    </tr>
+    <tr>
+      <th>release_date</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>runtime</th>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>spoken_languages</th>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>status</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>tagline</th>
+      <td>597</td>
+    </tr>
+    <tr>
+      <th>title</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>Keywords</th>
+      <td>276</td>
+    </tr>
+    <tr>
+      <th>cast</th>
+      <td>13</td>
+    </tr>
+    <tr>
+      <th>crew</th>
+      <td>16</td>
+    </tr>
+    <tr>
+      <th>revenue</th>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+### Top 10 revenue movies
+
+
+```python
+original_datasets['train'].sort_values(by='revenue', ascending=False).head(10)[['title','revenue','release_date']]
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>title</th>
+      <th>revenue</th>
+      <th>release_date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1126</th>
+      <td>The Avengers</td>
+      <td>1519557910</td>
+      <td>4/25/12</td>
+    </tr>
+    <tr>
+      <th>1761</th>
+      <td>Furious 7</td>
+      <td>1506249360</td>
+      <td>4/1/15</td>
+    </tr>
+    <tr>
+      <th>2770</th>
+      <td>Avengers: Age of Ultron</td>
+      <td>1405403694</td>
+      <td>4/22/15</td>
+    </tr>
+    <tr>
+      <th>684</th>
+      <td>Beauty and the Beast</td>
+      <td>1262886337</td>
+      <td>3/16/17</td>
+    </tr>
+    <tr>
+      <th>2322</th>
+      <td>Transformers: Dark of the Moon</td>
+      <td>1123746996</td>
+      <td>6/28/11</td>
+    </tr>
+    <tr>
+      <th>906</th>
+      <td>The Dark Knight Rises</td>
+      <td>1084939099</td>
+      <td>7/16/12</td>
+    </tr>
+    <tr>
+      <th>2135</th>
+      <td>Pirates of the Caribbean: On Stranger Tides</td>
+      <td>1045713802</td>
+      <td>5/14/11</td>
+    </tr>
+    <tr>
+      <th>2562</th>
+      <td>Finding Dory</td>
+      <td>1028570889</td>
+      <td>6/16/16</td>
+    </tr>
+    <tr>
+      <th>881</th>
+      <td>Alice in Wonderland</td>
+      <td>1025491110</td>
+      <td>3/3/10</td>
+    </tr>
+    <tr>
+      <th>734</th>
+      <td>Zootopia</td>
+      <td>1023784195</td>
+      <td>2/11/16</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 
 
@@ -590,15 +788,19 @@ sb.set_style("white")
 fig, axes = plt.subplots(1, 2, figsize = (14,6))
 
 sb.distplot(quant_data['revenue'], bins=20, kde=True, ax=axes[0])
+axes[0].set_title("Revenue")
 sb.distplot(np.log1p(quant_data['revenue']), bins=40, kde=True, ax=axes[1])
+axes[1].set_title("Log(Revenue)")
 
 for ax in axes: ax.grid()
     
 ```
 
 
-![png](output_12_0.png)
+![png](output_14_0.png)
 
+
+### Correlation between variables
 
 
 ```python
@@ -607,7 +809,25 @@ pd.plotting.scatter_matrix(quant_data, alpha = 0.3, figsize = (16,10));
 ```
 
 
-![png](output_13_0.png)
+![png](output_16_0.png)
+
+
+
+```python
+
+sb.heatmap(quant_data.corr(), annot=True, square=True, linewidths=.5, cmap="YlGnBu")
+
+```
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x7f6a184b31d0>
+
+
+
+
+![png](output_17_1.png)
 
 
 ## 2. Data cleansing and feature engineering
@@ -648,7 +868,7 @@ def data_prep_dates(data):
 
     
 data_prep_dates(all_data)
-all_data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
+all_data[['release_date','rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
 ```
 
 
@@ -672,6 +892,7 @@ all_data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>release_date</th>
       <th>rel_month</th>
       <th>rel_day</th>
       <th>rel_year</th>
@@ -685,11 +906,13 @@ all_data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
       <th></th>
       <th></th>
       <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>1</th>
+      <td>2/20/15</td>
       <td>2</td>
       <td>20</td>
       <td>2015</td>
@@ -698,6 +921,7 @@ all_data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
     </tr>
     <tr>
       <th>2</th>
+      <td>8/6/04</td>
       <td>8</td>
       <td>6</td>
       <td>2004</td>
@@ -706,6 +930,7 @@ all_data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
     </tr>
     <tr>
       <th>3</th>
+      <td>10/10/14</td>
       <td>10</td>
       <td>10</td>
       <td>2014</td>
@@ -723,15 +948,30 @@ all_data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
 yr_counts = all_data['rel_year'].value_counts().sort_index()
 yr_xticks = range(yr_counts.index.values[0],yr_counts.index.values[-1],5)
 
-plt.figure(figsize = (14,6))
+plt.figure(figsize = (16,6))
 plt.plot(yr_counts.index.values, yr_counts.values)
+#sb.countplot(all_data['rel_year'])
+#plt.xticks(fontsize=12,rotation=90)
 plt.xticks(yr_xticks)
 plt.title("Movies released by year",fontsize=20)
 plt.grid()
+yr_counts.sort_values(ascending=False).head()
 ```
 
 
-![png](output_18_0.png)
+
+
+    2013    141
+    2015    128
+    2010    126
+    2016    125
+    2012    125
+    Name: rel_year, dtype: int64
+
+
+
+
+![png](output_22_1.png)
 
 
 
@@ -761,12 +1001,12 @@ for ax in axes:
 ```
 
 
-![png](output_19_0.png)
+![png](output_23_0.png)
 
 
 
 ```python
-def data_prep_collection(data, mincount=2):
+def data_prep_collection(data, mincount=3):
 
     # belongs_to_collection
     data['from_collection'] = data['belongs_to_collection'].apply(lambda x: 1 if len(x) > 0 else 0)
@@ -775,7 +1015,7 @@ def data_prep_collection(data, mincount=2):
 
     collection_names = data['collection_name'].str.translate({ord(i): None for i in '[]<'}).str.get_dummies()
     
-    cols = list(collection_names.sum()[collection_names.sum()>=mincount].index)
+    cols = list(collection_names.sum()[collection_names.sum() >= mincount].index)
     
     data[cols] = collection_names[cols]
     
@@ -788,7 +1028,7 @@ all_data[encoded_cols].rename(lambda x:x[4:], axis='columns').sum().sort_values(
 ```
 
     Movies that belong to a collection: 604 / 3000
-    116 collection columns added
+    33 collection columns added
 
 
 
@@ -797,65 +1037,37 @@ all_data[encoded_cols].rename(lambda x:x[4:], axis='columns').sum().sort_values(
     James Bond Collection                        16
     Friday the 13th Collection                    7
     The Pink Panther (Original) Collection        6
-    Pokémon Collection                            5
     Police Academy Collection                     5
-    Paranormal Activity Collection                4
-    The Fast and the Furious Collection           4
-    Rocky Collection                              4
+    Pokémon Collection                            5
     Resident Evil Collection                      4
-    Rambo Collection                              4
+    Alien Collection                              4
     Child's Play Collection                       4
     Ice Age Collection                            4
-    Alien Collection                              4
+    Paranormal Activity Collection                4
+    Rambo Collection                              4
     Transformers Collection                       4
-    The Vengeance Collection                      3
-    Indiana Jones Collection                      3
-    Halloween Collection                          3
-    Star Trek: The Original Series Collection     3
-    Missing in Action Collection                  3
+    Rocky Collection                              4
+    The Fast and the Furious Collection           4
     The Dark Knight Collection                    3
-    Scary Movie Collection                        3
+    The Wolverine Collection                      3
+    Cars Collection                               3
+    The Vengeance Collection                      3
+    Diary of a Wimpy Kid Collection               3
+    The Jaws Collection                           3
+    Halloween Collection                          3
+    Indiana Jones Collection                      3
     Mexico Trilogy                                3
     Rush Hour Collection                          3
-    Alex Cross Collection                         3
-    Planet of the Apes Original Collection        3
-    Diary of a Wimpy Kid Collection               3
+    Missing in Action Collection                  3
+    Star Trek: The Original Series Collection     3
     Pirates of the Caribbean Collection           3
-    The Jaws Collection                           3
-    REC Collection                                3
+    Planet of the Apes Original Collection        3
+    Scary Movie Collection                        3
     Three Heroes Collection                       3
-                                                 ..
-    V/H/S Collection                              2
-    Wall Street Collection                        2
-    What the Bleep! Collection                    2
-    World of Watches Collection                   2
-    Would I Lie to You? Collection                2
-    The Godfather Collection                      2
-    The Exorcist Collection                       2
-    Percy Jackson Collection                      2
-    Step Up Collection                            2
-    Pet Sematary Collection                       2
-    Peter Pan Collection                          2
-    Predator Collection                           2
-    X-Men Collection                              2
-    Recep İvedik Serisi                           2
-    Saw Collection                                2
-    Smokey and the Bandit Collection              2
-    Species Collection                            2
-    Star Wars Collection                          2
-    Superman Collection                           2
-    The Conjuring Collection                      2
-    Swan Princess Series                          2
-    TRON Collection                               2
-    Taxi Collection                               2
-    Ted Collection                                2
-    Texas Chainsaw Massacre Collection            2
-    The Avengers Collection                       2
-    The Blue Lagoon collection                    2
-    The Bourne Collection                         2
-    The Chronicles of Narnia Collection           2
-    ... Has Fallen Collection                     2
-    Length: 116, dtype: int64
+    Qatsi Collection                              3
+    REC Collection                                3
+    Alex Cross Collection                         3
+    dtype: int64
 
 
 
@@ -877,10 +1089,10 @@ print("Movies with homepage: {} / {}".format(sum(all_data['has_homepage']), n_re
 def data_prep_genres(data):
 
     #extract genre information from genre column
-    data['genres_new'] = data['genres'].map(lambda x: sorted(['genre_{}'.format(d['name']) for d in dp.get_dictionary(x)])).map(lambda x: ','.join(map(str, x)))
+    data['genres_new'] = data['genres'].map(lambda x: sorted(['genre_{}'.format(d['name']) for d in dp.get_dictionary(x)])).map(lambda x: '|'.join(map(str, x)))
 
     #one-hot-encoding 
-    genres = data.genres_new.str.get_dummies(sep=',')
+    genres = data.genres_new.str.get_dummies(sep='|')
 
     #concatenate one-hot-encoding for genres to data
     data[genres.columns] = genres
@@ -1144,34 +1356,35 @@ all_data[encoded_cols].sum().sort_values(ascending=False).head(20)
 
 
 ```python
-def data_prep_prod_companies(data, mincount=15):
-
-    #extract production company information from column
-    data['production_companies_new'] = data['production_companies'].map(lambda x: sorted(['pcomp_{}'.format(d['name'].strip()) for d in dp.get_dictionary(x)])).map(lambda x: '|'.join(map(str, x)))
-
-    #one-hot-encoding 
-    pcomp = data.production_companies_new.str.get_dummies(sep='|')
-
-    #only columns with more than [mincount] entries
-    cols = list(pcomp.sum()[pcomp.sum()>mincount].index)
-        
-    #concatenate one-hot-encoding for companies to data
-    data[cols] = pcomp[cols]
+def data_prep_prod_companies_countries(data, mincount=(15,5)):
     
-    return cols
+    colset = {}
+    
+    for feat, prefix, minc in [('production_companies','pcomp',mincount[0]),('production_countries','pctry',mincount[1])]:
+        
+        newf = '{}_new'.format(feat)
+        data[newf] = data[feat].map(lambda x: sorted(['{}_{}'.format(prefix, d['name'].strip()) for d in dp.get_dictionary(x)])).map(lambda x: '|'.join(map(str, x))) 
 
-#prodcs.rename(lambda x:x[6:], axis='columns').sum()
-encoded_cols = data_prep_prod_companies(all_data)
-print('{} production companies columns added'.format(len(encoded_cols)))
-all_data[encoded_cols].rename(lambda x:x[6:], axis='columns').sum().sort_values(ascending=False)
+        #one-hot-encoding 
+        encod = data[newf].str.get_dummies(sep='|')
+
+        #only columns with more than [mincount] entries
+        colset[feat] = list(encod.sum()[encod.sum() >= minc].index)
+        
+        #concatenate one-hot-encoding for companies to data
+        data[colset[feat]] = encod[colset[feat]]
+    
+    return colset
+
+
+encoded_cols = data_prep_prod_companies_countries(all_data)
+
+for k in encoded_cols:
+    print('{} {} columns added'.format(k, len(encoded_cols[k])))
+    print(all_data[encoded_cols[k]].rename(lambda x:x[6:], axis='columns').sum().sort_values(ascending=False),'\n')    
 ```
 
-    45 production companies columns added
-
-
-
-
-
+    production_companies 48 columns added
     Warner Bros.                              202
     Universal Pictures                        188
     Paramount Pictures                        161
@@ -1190,65 +1403,39 @@ all_data[encoded_cols].rename(lambda x:x[6:], axis='columns').sum().sort_values(
     Village Roadshow Pictures                  36
     Regency Enterprises                        31
     Dune Entertainment                         30
-    Working Title Films                        30
     BBC Films                                  30
+    Working Title Films                        30
     Fox Searchlight Pictures                   29
     StudioCanal                                28
     Lionsgate                                  28
     DreamWorks SKG                             27
     Fox 2000 Pictures                          25
-    Orion Pictures                             24
     Hollywood Pictures                         24
+    Orion Pictures                             24
     Summit Entertainment                       24
     Dimension Films                            23
     Amblin Entertainment                       23
+    Original Film                              21
     Focus Features                             21
     Epsilon Motion Pictures                    21
-    Original Film                              21
-    Castle Rock Entertainment                  21
     Morgan Creek Productions                   21
-    Legendary Pictures                         19
+    Castle Rock Entertainment                  21
     Participant Media                          19
-    Film4                                      18
+    Legendary Pictures                         19
     New Regency Pictures                       18
+    Film4                                      18
     Blumhouse Productions                      18
     Spyglass Entertainment                     17
+    TSG Entertainment                          16
     Imagine Entertainment                      16
     Millennium Films                           16
     Screen Gems                                16
-    TSG Entertainment                          16
-    dtype: int64
-
-
-
-
-```python
-def data_prep_prod_country(data, mincount=5):
-
-    #extract production company information from genre column
-    data['production_countries_new'] = data['production_countries'].map(lambda x: sorted(['pctry_{}'.format(d['name'].strip()) for d in dp.get_dictionary(x)])).map(lambda x: '|'.join(map(str, x)))
-
-    #one-hot-encoding 
-    pcntry = data.production_countries_new.str.get_dummies(sep='|')
+    Lakeshore Entertainment                    15
+    Silver Pictures                            15
+    France 2 Cinéma                            15
+    dtype: int64 
     
-    #only columns with more than [mincount] entries
-    cols = list(pcntry.sum()[pcntry.sum()>mincount].index)
-    
-    all_data[cols] = pcntry[cols]
-    
-    return cols
-
-encoded_cols = data_prep_prod_country(all_data)
-print('{} countries columns added'.format(len(encoded_cols)))
-all_data[encoded_cols].rename(lambda x:x[6:], axis='columns').sum().sort_values(ascending=False)
-```
-
-    35 countries columns added
-
-
-
-
-
+    production_countries 39 columns added
     United States of America    2282
     United Kingdom               380
     France                       222
@@ -1256,14 +1443,14 @@ all_data[encoded_cols].rename(lambda x:x[6:], axis='columns').sum().sort_values(
     Canada                       120
     India                         81
     Italy                         64
-    Japan                         61
     Australia                     61
+    Japan                         61
     Russia                        58
     Spain                         54
-    China                         42
     Hong Kong                     42
-    Belgium                       23
+    China                         42
     Ireland                       23
+    Belgium                       23
     South Korea                   22
     Mexico                        19
     Sweden                        18
@@ -1272,20 +1459,24 @@ all_data[encoded_cols].rename(lambda x:x[6:], axis='columns').sum().sort_values(
     Czech Republic                14
     Denmark                       13
     Brazil                        12
-    Luxembourg                    10
     South Africa                  10
+    Luxembourg                    10
     Hungary                        9
     United Arab Emirates           9
     Romania                        8
-    Switzerland                    8
     Austria                        8
-    Greece                         7
+    Switzerland                    8
     Norway                         7
-    Finland                        6
-    Chile                          6
+    Greece                         7
     Argentina                      6
-    dtype: int64
-
+    Chile                          6
+    Finland                        6
+    Iran                           5
+    Poland                         5
+    Turkey                         5
+    Israel                         5
+    dtype: int64 
+    
 
 
 
@@ -1336,7 +1527,7 @@ all_data.shape
 
 
 
-    (3000, 271)
+    (3000, 195)
 
 
 
@@ -1347,237 +1538,21 @@ def prepare_data(in_data):
     #copy
     data = in_data.set_index('id')
     
-    data_prep_clean_na(data)
-    data_prep_dates(data)
-    data_prep_collection(data)
-    data_prep_homepage(data)
-    data_prep_genres(data)
-    data_prep_cast_crew(data)
-    data_prep_lang(data)
-    data_prep_prod_companies(data)
-    data_prep_prod_country(data)
-    data_prep_final(data)
+    data_prep_clean_na(data) # 1. Clean NA
+    data_prep_dates(data) # 2. Release Date decomposition
+    data_prep_collection(data) # 3. Collection
+    data_prep_homepage(data) # 4. Homepage
+    data_prep_genres(data) # 5. Genre
+    data_prep_cast_crew(data) # 6. Cast and Crew
+    data_prep_lang(data) # 7. Original Language
+    data_prep_prod_companies_countries(data) # 8. Production Countries and Companies 
+    data_prep_final(data) # 9. Final cleanup and logarithmic conversion of quantities
     
     return data
-    
-    """
-    # two movies have NaN runtime, we fill those with the mean
-    data['runtime'].fillna(data['runtime'].mean(), inplace=True)
-
-    # replace NaN in strings
-    data.fillna('', inplace=True)
-
-    #let's break down month/day/year from release_date
-    data[['rel_month','rel_day','rel_year']] = data['release_date'].str.split('/', expand=True).astype(int)
-
-    # fix 2-digit year for 1920-1999
-    data['rel_year'] += 1900
-    # 2000-2019
-    data.loc[data['rel_year'] <= 1919, "rel_year"] += 100
-
-    # extract day of week and quarter
-    rel_date = pd.to_datetime(data['release_date']) 
-    data['rel_dow'] = rel_date.dt.dayofweek
-    data['rel_quarter'] = rel_date.dt.quarter
-
-    data[['rel_month','rel_day','rel_year','rel_dow','rel_quarter']].head(3)
-
-    # belongs_to_collection
-    data['from_collection'] = data['belongs_to_collection'].apply(lambda x: 1 if len(x) > 0 else 0)
-    data['collection_name'] = data['belongs_to_collection'].map(lambda x: 'col_{}'.format(dp.get_dictionary(x)[0]['name']) if len(x) > 0 else '')
-    collection_names = data['collection_name'].str.translate({ord(i): None for i in '[]<'}).str.get_dummies()
-
-    #data = pd.concat([data, collection_names], axis=1, sort=False)
-    data[collection_names.columns] = collection_names
-    
-    #homepage
-    data['has_homepage'] = data['homepage'].apply(lambda x: 1 if len(x) > 0 else 0)
-
-    #extract genre information from genre column
-    data['genres_new'] = data['genres'].map(lambda x: sorted(['genre_{}'.format(d['name']) for d in dp.get_dictionary(x)])).map(lambda x: ','.join(map(str, x)))
-
-    #one-hot-encoding 
-    genres = data.genres_new.str.get_dummies(sep=',')
-
-    #concatenate one-hot-encoding for genres to data
-    #data = pd.concat([data, genres], axis=1, sort=False)
-    data[genres.columns] = genres
-    
-    genres.rename(lambda x:x[6:], axis='columns').sum()
-
-    data['crew_g0'] = data['crew'].apply(lambda x: sum([1 for i in dp.get_dictionary(x) if i['gender'] == 0]))
-    data['crew_g1'] = data['crew'].apply(lambda x: sum([1 for i in dp.get_dictionary(x) if i['gender'] == 1]))
-    data['crew_g2'] = data['crew'].apply(lambda x: sum([1 for i in dp.get_dictionary(x) if i['gender'] == 2]))
-    data['crew_cnt'] = data['crew_g0'] + data['crew_g1'] + data['crew_g2']  
-    #TODO: more with crew
-
-    data[['crew_g0', 'crew_g1', 'crew_g2', 'crew_cnt']].head()
-
-   
-    data['cast_g0'] = data['cast'].apply(lambda x: sum([1 for i in dp.get_dictionary(x) if i['gender'] == 0]))
-    data['cast_g1'] = data['cast'].apply(lambda x: sum([1 for i in dp.get_dictionary(x) if i['gender'] == 1]))
-    data['cast_g2'] = data['cast'].apply(lambda x: sum([1 for i in dp.get_dictionary(x) if i['gender'] == 2]))
-
-    data['cast_cnt'] = data['cast_g0'] + data['cast_g1']+data['cast_g2']
-
-    #TODO: more with cast
-
-    data[['cast_g0', 'cast_g1', 'cast_g2', 'cast_cnt']].head()
-
-    original_langs = pd.get_dummies(data['original_language'], prefix='lang_')
-    #data = pd.concat([data, original_langs], axis=1, sort=False)
-    data[original_langs.columns] = original_langs
-    
-    
-    #extract production company information from column
-    data['production_companies_new'] = data['production_companies'].map(lambda x: sorted(['pcomp_{}'.format(d['name'].strip()) for d in dp.get_dictionary(x)])).map(lambda x: '|'.join(map(str, x)))
-
-    #one-hot-encoding 
-    pcomp = data.production_companies_new.str.get_dummies(sep='|')
-
-    # one-hot-encoding for genres to data
-    data[pcomp.columns] = pcomp
-
-    
-    data['production_countries_new'] = data['production_countries'].map(lambda x: sorted(['pctry_{}'.format(d['name'].strip()) for d in dp.get_dictionary(x)])).map(lambda x: '|'.join(map(str, x)))
-
-    #one-hot-encoding 
-    pcntry = data.production_countries_new.str.get_dummies(sep='|')
-
-    #concatenate one-hot-encoding for genres to all_data
-    #all_data = pd.concat([all_data, pcntry], axis=1, sort=False)
-
-    data[pcntry.columns] = pcntry
-
-    #convert quantities to log 
-    data[['log_budget','log_popularity','log_runtime']] = np.log1p(data[['budget','popularity','runtime']])
-
-    # remove original columns
-    drop_cols = ['release_date', 
-                 'belongs_to_collection', 
-                 'collection_name',
-                 'homepage', 
-                 'genres',
-                 'genres_new',
-                 'crew',
-                 'cast',
-                 'original_language',
-
-                 'original_title',
-                 'overview',
-                 'production_companies',
-                 'production_companies_new',
-                 'production_countries',
-                 'production_countries_new',
-                 'spoken_languages',
-                 'tagline',
-                 'title',
-                 'Keywords',
-                 'status',
-
-                 'imdb_id',
-                 'poster_path',
-
-                 'budget',
-                 'popularity',
-                 'runtime'
-                ]
-
-    data.drop(drop_cols, axis=1, inplace=True);
-    
-    return data
-    
-    """
-
-
+                        
 ```
 
-## 3. Train the KNN benchmark model based on budget, popularity and runtime
-
-
-```python
-# remove table meta data, column names etc. 
-X = all_data[['log_budget','log_popularity','log_runtime']].values
-y = all_data[['revenue']].values
-
-# create Validation Split
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.01, random_state=16)
-
-# scale
-X_scaler = StandardScaler()
-X_train_scaled  = X_scaler.fit_transform(X_train)
-X_val_scaled    = X_scaler.transform(X_val)
-
-y_train_scaled = np.log1p(y_train)
-
-#create regressor, fit the data
-reg = KNeighborsRegressor().fit(X_train_scaled, y_train_scaled)
-
-#define score function
-def score_function(y_true, y_pred):
-    return np.sqrt(mean_squared_log_error(y_true, y_pred))
-
-# apply the regression model on the prepared train, validation and test set and invert the logarithmic scaling
-y_train_pred  = np.expm1(reg.predict(X_train_scaled))
-y_val_pred    = np.expm1(reg.predict(X_val_scaled))
-#y_test_pred   = inverseY(reg.predict(X_test_scaled))
-
-# print the RMLS error on training & validation 
-print("RMLS Error on Training Dataset:\t", score_function(y_train , y_train_pred), score_function(y_train, y_train_pred))
-print("RMLS Error on Val Dataset:\t", score_function(y_val , y_val_pred), score_function(y_val , y_val_pred))
-```
-
-
-    ---------------------------------------------------------------------------
-
-    KeyError                                  Traceback (most recent call last)
-
-    <ipython-input-23-a37910dabd46> in <module>
-          1 # remove table meta data, column names etc.
-    ----> 2 X = all_data[['budget','popularity','runtime']].values
-          3 y = all_data[['revenue']].values
-          4 
-          5 # create Validation Split
-
-
-    /opt/anaconda3/envs/ml-1/lib/python3.6/site-packages/pandas/core/frame.py in __getitem__(self, key)
-       2932                 key = list(key)
-       2933             indexer = self.loc._convert_to_indexer(key, axis=1,
-    -> 2934                                                    raise_missing=True)
-       2935 
-       2936         # take() does not accept boolean indexers
-
-
-    /opt/anaconda3/envs/ml-1/lib/python3.6/site-packages/pandas/core/indexing.py in _convert_to_indexer(self, obj, axis, is_setter, raise_missing)
-       1352                 kwargs = {'raise_missing': True if is_setter else
-       1353                           raise_missing}
-    -> 1354                 return self._get_listlike_indexer(obj, axis, **kwargs)[1]
-       1355         else:
-       1356             try:
-
-
-    /opt/anaconda3/envs/ml-1/lib/python3.6/site-packages/pandas/core/indexing.py in _get_listlike_indexer(self, key, axis, raise_missing)
-       1159         self._validate_read_indexer(keyarr, indexer,
-       1160                                     o._get_axis_number(axis),
-    -> 1161                                     raise_missing=raise_missing)
-       1162         return keyarr, indexer
-       1163 
-
-
-    /opt/anaconda3/envs/ml-1/lib/python3.6/site-packages/pandas/core/indexing.py in _validate_read_indexer(self, key, indexer, axis, raise_missing)
-       1244                 raise KeyError(
-       1245                     u"None of [{key}] are in the [{axis}]".format(
-    -> 1246                         key=key, axis=self.obj._get_axis_name(axis)))
-       1247 
-       1248             # We (temporarily) allow for some missing keys with .loc, except in
-
-
-    KeyError: "None of [Index(['budget', 'popularity', 'runtime'], dtype='object')] are in the [columns]"
-
-
-### Conclusion
-
-## 4. Boosting models
+## 4. Implementation
 
 
 ```python
@@ -1585,23 +1560,21 @@ ds_train = prepare_data(original_datasets['train'])
 ds_test_kaggle = prepare_data(original_datasets['test'])
 
 ds_train.shape, ds_train.columns
-
 ```
 
 
 
 
-    ((3000, 236),
+    ((3000, 195),
      Index(['revenue', 'rel_month', 'rel_day', 'rel_year', 'rel_dow', 'rel_quarter',
-            'from_collection', 'col_... Has Fallen Collection',
-            'col_48 Hrs. Collection', 'col_Ace Ventura Collection',
+            'from_collection', 'col_Alex Cross Collection', 'col_Alien Collection',
+            'col_Cars Collection',
             ...
-            'pcomp_Twentieth Century Fox Film Corporation', 'pcomp_United Artists',
-            'pcomp_Universal Pictures', 'pcomp_Village Roadshow Pictures',
-            'pcomp_Walt Disney Pictures', 'pcomp_Warner Bros.',
-            'pcomp_Working Title Films', 'log_budget', 'log_popularity',
+            'pctry_Spain', 'pctry_Sweden', 'pctry_Switzerland', 'pctry_Turkey',
+            'pctry_United Arab Emirates', 'pctry_United Kingdom',
+            'pctry_United States of America', 'log_budget', 'log_popularity',
             'log_runtime'],
-           dtype='object', length=236))
+           dtype='object', length=195))
 
 
 
@@ -1609,23 +1582,23 @@ ds_train.shape, ds_train.columns
 ```python
 class MovieRevenuePredictor():
     
-    BASE_MODELS = ['knn','xgb','lgb','cat']
-    GB_MODELS = ['xgb','lgb','cat']
+    MOD_CLASS = { 'BASE':      ['knn','xgb','lgb','cat'],
+                  'BENCHMARK': ['knn'] }
     
-    def __init__(self, data, random_seed=1, splits=5, test_size=0.1): 
+    def __init__(self, data, random_seed=1, splits=10, test_size=0.1, gridsearch=False): 
         
         self.random_seed = random_seed
     
         np.random.seed(random_seed)
         
+        self.train_results = {}
         self.prepare_data(data, splits, test_size)
-        self.init_models()
-        
+        self.init_models(gridsearch)
         
     
     def prepare_data(self, dataset, splits, test_size):
         
-        train, test,  = train_test_split(dataset, test_size=0.1, random_state=self.random_seed)
+        train, test,  = train_test_split(dataset, test_size=test_size, random_state=self.random_seed)
         
         self.data = {
             'raw': dataset, 
@@ -1638,54 +1611,77 @@ class MovieRevenuePredictor():
         self.fold = list(kfold.split(self.data['train'].values))
         
         
-    def init_models(self):
+    def init_models(self, gridsearch):
         
-        self.models = {
+        self.vanilla_models = {
             
             'knn': KNeighborsRegressor(),
-            
-            'xgb': xgb.XGBRegressor(max_depth=6, 
-                                    learning_rate=0.01, 
-                                    n_estimators=10000, 
-                                    eta=0.01,
-                                    objective='reg:linear', 
-                                    gamma=1.45, 
+                       
+            'xgb': xgb.XGBRegressor(objective='reg:linear', 
                                     seed=self.random_seed, 
                                     silent=True,
-                                    subsample=0.6, 
-                                    colsample_bytree=0.7, 
-                                    colsample_bylevel=0.50,
                                     eval_metric='rmse'),
             
-            'lgb': lgb.LGBMRegressor(n_estimators=10000, 
-                                     objective="regression", 
+            'lgb': lgb.LGBMRegressor(objective="regression", 
                                      metric="rmse", 
-                                     num_leaves=20, 
-                                     min_child_samples=100,
-                                     learning_rate=0.01, 
-                                     bagging_fraction=0.8, 
-                                     feature_fraction=0.8, 
-                                     bagging_frequency=1, 
                                      bagging_seed=self.random_seed, 
-                                     subsample=.9, 
-                                     colsample_bytree=.9,
                                      use_best_model=True),
             
-            'cat': cat.CatBoostRegressor(iterations=10000, 
-                                         learning_rate=0.01, 
-                                         depth=5, 
-                                         eval_metric='RMSE',
-                                         colsample_bylevel=0.7,
-                                         bagging_temperature = 0.2,
-                                         metric_period = None,
-                                         early_stopping_rounds=200,
-                                         random_seed=self.random_seed),
-            
-           
+            'cat': cat.CatBoostRegressor(eval_metric='RMSE',
+                                         random_seed=self.random_seed,
+                                         verbose=False)
         }
-                    
         
-    def train(self, models=BASE_MODELS, stacking=False, test=True, **kwargs):
+        self.models = self.vanilla_models
+        
+        if gridsearch:
+            self.find_best_params()
+        
+        
+    
+    def find_best_params(self):
+        
+        gparams = {
+            
+            #'knn': {},
+            
+            'xgb': { 'max_depth': [10,30,50], 
+                     'learning_rate': [0.05, 0.1,0.16],
+                     'min_child_weight' : [1,3,6], 
+                     'n_estimators': [200] },
+            
+            'lgb': { 'max_depth': [25,50, 75],
+                     'learning_rate': [0.01,0.05,0.1],
+                     'num_leaves': [300,900,1200],
+                     'n_estimators': [200] },
+                    
+            'cat': { 'depth': [4, 7, 10],
+                     'learning_rate': [0.03, 0.1, 0.15],
+                     'l2_leaf_reg': [1,4,9],
+                     'iterations': [300] }
+            
+        }
+        
+        self.best_models = {}
+            
+        for m in gparams:
+        
+            grid_search = GridSearchCV(self.models[m], 
+                                       param_grid=gparams[m], 
+                                       scoring='neg_mean_squared_error',
+                                       cv=3, verbose=10, n_jobs=-1)
+            
+            X = self.data['train'].drop(['revenue'], axis=1).values
+            y = np.log1p(self.data['train']['revenue'].values)
+            
+            grid_search.fit(X, y)
+
+            self.best_models[m] = grid_search.best_estimator_
+            self.models[m] = grid_search.best_estimator_
+    
+        
+        
+    def train(self, models=MOD_CLASS['BASE'], stacking=False, test=True, **kwargs):
         
         fit_params = kwargs.get('fit_params', {"early_stopping_rounds": 500, "verbose": 100})
         
@@ -1722,7 +1718,7 @@ class MovieRevenuePredictor():
                 fold_val_pred = []
                 fold_err = []
                 
-                fit_args= {} if m=='knn' or m=='knn1' else {**fit_params, 'eval_set':[(val_x, val_y)] }
+                fit_args= {} if m=='knn' else {**fit_params, 'eval_set':[(val_x, val_y)] }
                 
                 self.models[m].fit(trn_x, trn_y, **fit_args)
                 
@@ -1733,36 +1729,35 @@ class MovieRevenuePredictor():
                 
                 result_dict[m]['valid'].append({ 'score': val_score, 'time': trn_time_f })
                 
-                print("\n[{} model][Fold {:>2}/{}] val score: {:.5f} ({:.2f} mins)".format(m, i+1, len(self.fold), val_score, trn_time_f))
+                print("[{} model][Fold {:>2}/{}] val score: {:.5f} ({:.2f} mins)".format(m, i+1, len(self.fold), val_score, trn_time_f))
                 
                 if stacking: 
                     self.data['train_meta'].loc[val,m] = np.expm1(val_pred)
                     
-                
             trn_time = (datetime.now()-start).seconds/60
             trn_pred = self.models[m].predict(X)
             trn_score = np.sqrt(mean_squared_error(np.log1p(y), trn_pred))
             val_score = np.mean(pd.DataFrame(result_dict[m]['valid'])['score'])
             
-            print("\n[{} model] end: val avg score: {:.5f} ({:.2f} mins)".format(m, val_score ,trn_time))
+            print("\n[{} model] val avg score: {:.5f} ({:.2f} mins)".format(m, val_score ,trn_time))
             
             result_dict[m]['train'] = { 'score': trn_score, 'time': trn_time }
             
-            
-        if test: 
-            test_result = self.test(models=models) 
-            
-            for m in test_result:
-                result_dict[m]['test'] = test_result[m] 
-            
+            if test: 
+                result_dict[m]['test'] = self.test(models=[m])[m] 
+                print("[{} model] test score: {:.5f}".format(m, result_dict[m]['test']['score']))
+        
+        
         if stacking: 
             self.data['train_meta'].set_index('id', inplace=True)
-            self.train_meta(stack=models)
-            
-        return result_dict
+            self.train_meta(stack=models, test=test, **kwargs)
+        
+        self.train_results = result_dict
+        
+        return self.train_results
             
         
-    def test(self, models=BASE_MODELS, **kwargs):
+    def test(self, models=MOD_CLASS['BASE'], **kwargs):
      
         test_src = kwargs.get('test_data', self.data['test'])
         test_set = pd.DataFrame(data=test_src, columns=self.data['train'].columns).fillna(0) 
@@ -1777,12 +1772,12 @@ class MovieRevenuePredictor():
             test_pred = np.expm1(self.models[m].predict(X))
             test_score = np.sqrt(mean_squared_log_error(y, test_pred))
             
-            result_dict[m] = test_score
+            result_dict[m] = { 'score': test_score, 'pred': test_pred } 
         
         return result_dict
     
     
-    def predict(self, X, models=BASE_MODELS, prep_data=False):
+    def predict(self, X, models=MOD_CLASS['BASE'], prep_data=False):
         
         X_in = prepare_data(X) if prep_data else X        
         X_in = pd.DataFrame(data=X_in, columns=self.data['train'].columns).fillna(0) 
@@ -1793,38 +1788,79 @@ class MovieRevenuePredictor():
         return pd.DataFrame(data=preds, index=X.index)
     
     
-    def train_meta(self, stack=BASE_MODELS, **kwargs):
+    def train_meta(self, stack=MOD_CLASS['BASE'], test=False, **kwargs):
         
-        add_feats = kwargs.get('add_feats', [])
+        add_feats_meta = kwargs.get('add_feats_meta', [])
+        verbose = kwargs.get('verbose', True)
         
+        if verbose:
+            print("\n[meta model] start")
+                
         train_set = copy.deepcopy(self.data['train_meta'])
         train_set[['revenue', *stack]] = np.log1p(train_set[['revenue', *stack]])
         
-        x_train_meta = train_set[[*stack, *add_feats]]
-        y_train_meta = train_set['revenue']
-
-        self.meta_model = LinearRegression()
-        self.meta_model.fit(x_train_meta, y_train_meta)
-    
-    def predict_meta(self, X, stack=BASE_MODELS, **kwargs):
+        x_train_meta = train_set[[*stack, *add_feats_meta]].values
+        y_train_meta = train_set['revenue'].values
         
-        add_feats = kwargs.get('add_feats', [])
+        self.meta_model = LinearRegression()
+        
+        result_dict = { 'valid':[] }
+        
+        start = datetime.now()
+        
+        for i, (trn, val) in enumerate(self.fold):
+            
+            start_f = datetime.now()
+            
+            self.meta_model.fit(x_train_meta[trn], y_train_meta[trn])
+            
+            val_pred = self.meta_model.predict((x_train_meta[val]))
+            val_score = np.sqrt(mean_squared_error(y_train_meta[val], val_pred))
+
+            trn_time_f = (datetime.now()-start_f).seconds/60
+
+            result_dict['valid'].append({ 'score': val_score, 'time': trn_time_f })
+            
+            if verbose:
+                print("[meta model][Fold {:>2}/{}] val score: {:.5f} ({:.2f} mins)".format(i+1, len(self.fold), val_score, trn_time_f))
+        
+
+        val_score = np.mean(pd.DataFrame(result_dict['valid'])['score'])
+        trn_time = (datetime.now()-start).seconds/60
+        
+        if verbose:
+            print("\n[meta model] val avg score: {:.5f} ({:.2f} mins)".format(val_score ,trn_time))
+        
+        if test: 
+            result_dict['test'] = self.test_meta(stack=stack, train=False, **kwargs)
+            
+            if verbose:
+                print("[meta model] test score: {:.5f}".format(result_dict['test']['score']))
+        
+        return result_dict
+            
+    
+    def predict_meta(self, X, stack=MOD_CLASS['BASE'], **kwargs):
+        
+        add_feats_meta = kwargs.get('add_feats_meta', [])
+        train = kwargs.get('train', True)
         
         # making sure we have the right features
-        self.train_meta(stack=stack, **kwargs)
+        if train:
+            self.train_meta(stack=stack, verbose=False, **kwargs)
         
         data_set = pd.DataFrame(data=X, columns=self.data['train_meta'].columns).fillna(0)
 
         data_set[stack] = np.log1p(self.predict(models=stack, X=X))
 
-        x_meta = data_set[[*stack, *add_feats]]
+        x_meta = data_set[[*stack, *add_feats_meta]]
 
         pred = self.meta_model.predict(x_meta)
 
         return pd.DataFrame(np.expm1(pred), index=X.index, columns=['revenue'])
                  
         
-    def test_meta(self, stack=BASE_MODELS, **kwargs):
+    def test_meta(self, stack=MOD_CLASS['BASE'], **kwargs):
         
         test_data = kwargs.get('test_data', self.data['test'])
                 
@@ -1834,266 +1870,312 @@ class MovieRevenuePredictor():
                  'score': np.sqrt(mean_squared_log_error(test_pred, test_data['revenue'])) }
     
     
+    def print_train_results(self):
+        
+        if self.train_results == {}:
+            print("No train results found")
+            return
+        
+        for m, res in self.train_results.items():
+            print("\n[{}] train score: {:.5f} ({:.2f} mins)".format(m, res['train']['score'], res['train']['time']))
+            #for i, fold in enumerate(train_result[m]['valid']):
+            #    print("[{}][{}] valid score: {:.5f} ({:.2f} mins)".format(m, i+1, fold['score'], fold['time']))
+            print("[{}] avg valid score: {:.5f}".format(m, pd.DataFrame(res['valid'])['score'].mean()))
+            print("[{}] test score: {:.5f}\n".format(m, res['test']['score']))
     
+        
     
+    def get_best_meta_model(self):
+        pass
+        
+        
+        
 ```
 
 
 ```python
-movie_reg = MovieRevenuePredictor(ds_train, random_seed=2019, splits=10, test_size=0)
+random_seed=681
 
-train_result = movie_reg.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbose": False })
+movie_pred = MovieRevenuePredictor(ds_train, random_seed=random_seed, splits=10, gridsearch=True)
 
+movie_pred.best_models
+#movie_pred.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbose": False });
+```
+
+    Fitting 3 folds for each of 27 candidates, totalling 81 fits
+
+
+    [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   10.6s remaining:  1.1min
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   19.7s remaining:   59.9s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   21.2s remaining:   38.1s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   24.7s remaining:   27.9s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   27.9s remaining:   20.2s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   31.6s remaining:   14.1s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   33.5s remaining:    8.2s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   38.8s remaining:    3.7s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   44.2s finished
+
+
+    Fitting 3 folds for each of 27 candidates, totalling 81 fits
+
+
+    [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:    1.4s remaining:    9.1s
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:    1.5s remaining:    4.5s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:    1.6s remaining:    2.8s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:    1.7s remaining:    1.9s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:    2.8s remaining:    2.1s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:    2.9s remaining:    1.3s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:    3.0s remaining:    0.7s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:    3.1s remaining:    0.3s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:    3.8s finished
+
+
+    Fitting 3 folds for each of 27 candidates, totalling 81 fits
+
+
+    [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   14.2s remaining:  1.5min
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   14.8s remaining:   45.0s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   18.0s remaining:   32.2s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   20.8s remaining:   23.5s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   34.7s remaining:   25.1s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   48.4s remaining:   21.6s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   50.2s remaining:   12.4s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   53.1s remaining:    5.0s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   56.4s finished
+
+
+
+
+
+    {'xgb': XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+            colsample_bynode=1, colsample_bytree=1, eval_metric='rmse', gamma=0,
+            importance_type='gain', learning_rate=0.05, max_delta_step=0,
+            max_depth=30, min_child_weight=6, missing=None, n_estimators=200,
+            n_jobs=1, nthread=None, objective='reg:linear', random_state=0,
+            reg_alpha=0, reg_lambda=1, scale_pos_weight=1, seed=681,
+            silent=True, subsample=1, verbosity=1),
+     'lgb': LGBMRegressor(bagging_seed=681, boosting_type='gbdt', class_weight=None,
+            colsample_bytree=1.0, importance_type='split', learning_rate=0.05,
+            max_depth=50, metric='rmse', min_child_samples=20,
+            min_child_weight=0.001, min_split_gain=0.0, n_estimators=200,
+            n_jobs=-1, num_leaves=300, objective='regression',
+            random_state=None, reg_alpha=0.0, reg_lambda=0.0, silent=True,
+            subsample=1.0, subsample_for_bin=200000, subsample_freq=0,
+            use_best_model=True),
+     'cat': <catboost.core.CatBoostRegressor at 0x7f6a188a0908>}
+
+
+
+
+```python
+movie_pred.best_models['cat'].get_params()
+```
+
+
+
+
+    {'eval_metric': 'RMSE',
+     'verbose': False,
+     'random_seed': 681,
+     'loss_function': 'RMSE',
+     'depth': 4,
+     'iterations': 300,
+     'l2_leaf_reg': 4,
+     'learning_rate': 0.1}
+
+
+
+
+```python
+movie_pred.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbose": False });
 ```
 
     
     [knn model] start
+    [knn model][Fold  1/10] val score: 2.99851 (0.00 mins)
+    [knn model][Fold  2/10] val score: 2.69813 (0.00 mins)
+    [knn model][Fold  3/10] val score: 2.29051 (0.00 mins)
+    [knn model][Fold  4/10] val score: 2.49367 (0.00 mins)
+    [knn model][Fold  5/10] val score: 2.28103 (0.00 mins)
+    [knn model][Fold  6/10] val score: 2.46119 (0.00 mins)
+    [knn model][Fold  7/10] val score: 2.53110 (0.00 mins)
+    [knn model][Fold  8/10] val score: 2.41599 (0.00 mins)
+    [knn model][Fold  9/10] val score: 2.20619 (0.00 mins)
+    [knn model][Fold 10/10] val score: 2.67219 (0.00 mins)
     
-    [knn model][Fold  1/10] val score: 2.56984 (0.00 mins)
-    
-    [knn model][Fold  2/10] val score: 2.40967 (0.00 mins)
-    
-    [knn model][Fold  3/10] val score: 2.42665 (0.00 mins)
-    
-    [knn model][Fold  4/10] val score: 2.55669 (0.00 mins)
-    
-    [knn model][Fold  5/10] val score: 2.57421 (0.00 mins)
-    
-    [knn model][Fold  6/10] val score: 2.52762 (0.00 mins)
-    
-    [knn model][Fold  7/10] val score: 2.50550 (0.00 mins)
-    
-    [knn model][Fold  8/10] val score: 2.24833 (0.00 mins)
-    
-    [knn model][Fold  9/10] val score: 2.54270 (0.00 mins)
-    
-    [knn model][Fold 10/10] val score: 2.69836 (0.00 mins)
-    
-    [knn model] end: val avg score: 2.50596 (0.00 mins)
+    [knn model] val avg score: 2.50485 (0.00 mins)
+    [knn model] test score: 2.65570
     
     [xgb model] start
+    [xgb model][Fold  1/10] val score: 2.20866 (0.28 mins)
+    [xgb model][Fold  2/10] val score: 2.05878 (0.28 mins)
+    [xgb model][Fold  3/10] val score: 1.94693 (0.28 mins)
+    [xgb model][Fold  4/10] val score: 2.06828 (0.28 mins)
+    [xgb model][Fold  5/10] val score: 1.67758 (0.28 mins)
+    [xgb model][Fold  6/10] val score: 1.90005 (0.28 mins)
+    [xgb model][Fold  7/10] val score: 2.01991 (0.28 mins)
+    [xgb model][Fold  8/10] val score: 1.73233 (0.28 mins)
+    [xgb model][Fold  9/10] val score: 1.77082 (0.28 mins)
+    [xgb model][Fold 10/10] val score: 2.11173 (0.28 mins)
     
-    [xgb model][Fold  1/10] val score: 1.78770 (1.07 mins)
-    
-    [xgb model][Fold  2/10] val score: 1.88346 (0.83 mins)
-    
-    [xgb model][Fold  3/10] val score: 1.92612 (0.32 mins)
-    
-    [xgb model][Fold  4/10] val score: 1.83281 (0.67 mins)
-    
-    [xgb model][Fold  5/10] val score: 1.88235 (0.73 mins)
-    
-    [xgb model][Fold  6/10] val score: 1.86312 (0.35 mins)
-    
-    [xgb model][Fold  7/10] val score: 1.81597 (0.50 mins)
-    
-    [xgb model][Fold  8/10] val score: 1.82785 (0.40 mins)
-    
-    [xgb model][Fold  9/10] val score: 1.96265 (0.25 mins)
-    
-    [xgb model][Fold 10/10] val score: 2.18098 (1.15 mins)
-    
-    [xgb model] end: val avg score: 1.89630 (6.35 mins)
+    [xgb model] val avg score: 1.94951 (2.90 mins)
+    [xgb model] test score: 1.93643
     
     [lgb model] start
+    [lgb model][Fold  1/10] val score: 2.40022 (0.02 mins)
+    [lgb model][Fold  2/10] val score: 2.10785 (0.02 mins)
+    [lgb model][Fold  3/10] val score: 1.92390 (0.00 mins)
+    [lgb model][Fold  4/10] val score: 2.10143 (0.00 mins)
+    [lgb model][Fold  5/10] val score: 1.71386 (0.02 mins)
+    [lgb model][Fold  6/10] val score: 1.91689 (0.00 mins)
+    [lgb model][Fold  7/10] val score: 2.12366 (0.00 mins)
+    [lgb model][Fold  8/10] val score: 1.84078 (0.00 mins)
+    [lgb model][Fold  9/10] val score: 1.67658 (0.00 mins)
+    [lgb model][Fold 10/10] val score: 2.20239 (0.02 mins)
     
-    [lgb model][Fold  1/10] val score: 1.81438 (0.10 mins)
-    
-    [lgb model][Fold  2/10] val score: 1.98397 (0.02 mins)
-    
-    [lgb model][Fold  3/10] val score: 1.89373 (0.05 mins)
-    
-    [lgb model][Fold  4/10] val score: 1.92439 (0.08 mins)
-    
-    [lgb model][Fold  5/10] val score: 1.83995 (0.08 mins)
-    
-    [lgb model][Fold  6/10] val score: 1.95367 (0.07 mins)
-    
-    [lgb model][Fold  7/10] val score: 1.84046 (0.05 mins)
-    
-    [lgb model][Fold  8/10] val score: 1.89156 (0.02 mins)
-    
-    [lgb model][Fold  9/10] val score: 2.03719 (0.03 mins)
-    
-    [lgb model][Fold 10/10] val score: 2.20421 (0.08 mins)
-    
-    [lgb model] end: val avg score: 1.93835 (0.67 mins)
+    [lgb model] val avg score: 2.00076 (0.15 mins)
+    [lgb model] test score: 1.99794
     
     [cat model] start
+    [cat model][Fold  1/10] val score: 2.19479 (0.05 mins)
+    [cat model][Fold  2/10] val score: 2.04845 (0.05 mins)
+    [cat model][Fold  3/10] val score: 1.81890 (0.07 mins)
+    [cat model][Fold  4/10] val score: 1.99653 (0.05 mins)
+    [cat model][Fold  5/10] val score: 1.64939 (0.05 mins)
+    [cat model][Fold  6/10] val score: 1.91005 (0.05 mins)
+    [cat model][Fold  7/10] val score: 1.98652 (0.05 mins)
+    [cat model][Fold  8/10] val score: 1.73573 (0.05 mins)
+    [cat model][Fold  9/10] val score: 1.75025 (0.07 mins)
+    [cat model][Fold 10/10] val score: 2.01263 (0.05 mins)
     
-    [cat model][Fold  1/10] val score: 1.82929 (2.23 mins)
+    [cat model] val avg score: 1.91032 (0.58 mins)
+    [cat model] test score: 1.90409
     
-    [cat model][Fold  2/10] val score: 1.96558 (0.65 mins)
+    [meta model] start
+    [meta model][Fold  1/10] val score: 2.17808 (0.00 mins)
+    [meta model][Fold  2/10] val score: 2.01831 (0.00 mins)
+    [meta model][Fold  3/10] val score: 1.83880 (0.00 mins)
+    [meta model][Fold  4/10] val score: 2.00307 (0.00 mins)
+    [meta model][Fold  5/10] val score: 1.62782 (0.00 mins)
+    [meta model][Fold  6/10] val score: 1.87774 (0.00 mins)
+    [meta model][Fold  7/10] val score: 1.97089 (0.00 mins)
+    [meta model][Fold  8/10] val score: 1.70127 (0.00 mins)
+    [meta model][Fold  9/10] val score: 1.74193 (0.00 mins)
+    [meta model][Fold 10/10] val score: 2.00366 (0.00 mins)
     
-    [cat model][Fold  3/10] val score: 1.96783 (0.80 mins)
-    
-    [cat model][Fold  4/10] val score: 1.91728 (2.28 mins)
-    
-    [cat model][Fold  5/10] val score: 1.91161 (2.17 mins)
-    
-    [cat model][Fold  6/10] val score: 1.87064 (1.80 mins)
-    
-    [cat model][Fold  7/10] val score: 1.90150 (1.57 mins)
-    
-    [cat model][Fold  8/10] val score: 1.93691 (0.27 mins)
-    
-    [cat model][Fold  9/10] val score: 2.01091 (0.77 mins)
-    
-    [cat model][Fold 10/10] val score: 2.25596 (2.15 mins)
-    
-    [cat model] end: val avg score: 1.95675 (14.75 mins)
+    [meta model] val avg score: 1.89616 (0.00 mins)
+    [meta model] test score: 1.89112
 
 
 
 ```python
-movie_reg2 = MovieRevenuePredictor(ds_train, random_seed=681)
-
-train_result2 = movie_reg2.train(stacking=True)
-
+movie_pred_vanilla = MovieRevenuePredictor(ds_train, random_seed=random_seed, splits=10, gridsearch=False)
+movie_pred_vanilla.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbose": False });
 ```
 
-
-```python
-movie_reg = MovieRevenuePredictor(ds_train, random_seed=2019, splits=10)
-
-movie_reg.data['test'] = movie_reg.data['train'].iloc[1]
-
-train_result = movie_reg.train(stacking=True, test=False, fit_params={"early_stopping_rounds": 500, "verbose": False })
-
-```
-
-
-```python
-trn_mods=list(train_result.keys())
-
-var=movie_reg.data['train_meta'][['revenue',*trn_mods]]
-
-var.head()
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>revenue</th>
-      <th>knn</th>
-      <th>xgb</th>
-      <th>lgb</th>
-      <th>cat</th>
-    </tr>
-    <tr>
-      <th>id</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>941</th>
-      <td>18948425</td>
-      <td>4.379821e+07</td>
-      <td>3544104.0</td>
-      <td>3.736819e+06</td>
-      <td>7.019522e+06</td>
-    </tr>
-    <tr>
-      <th>1569</th>
-      <td>11263966</td>
-      <td>3.870598e+07</td>
-      <td>14150026.0</td>
-      <td>1.176697e+07</td>
-      <td>9.735208e+06</td>
-    </tr>
-    <tr>
-      <th>119</th>
-      <td>1796389</td>
-      <td>1.161414e+06</td>
-      <td>3182211.5</td>
-      <td>8.784035e+05</td>
-      <td>1.993180e+06</td>
-    </tr>
-    <tr>
-      <th>894</th>
-      <td>13000000</td>
-      <td>8.653245e+06</td>
-      <td>39659232.0</td>
-      <td>2.276641e+07</td>
-      <td>4.700110e+07</td>
-    </tr>
-    <tr>
-      <th>1850</th>
-      <td>18000000</td>
-      <td>2.537058e+06</td>
-      <td>5295027.0</td>
-      <td>2.238780e+07</td>
-      <td>1.537014e+06</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
+    
+    [knn model] start
+    [knn model][Fold  1/10] val score: 2.99851 (0.00 mins)
+    [knn model][Fold  2/10] val score: 2.69813 (0.00 mins)
+    [knn model][Fold  3/10] val score: 2.29051 (0.00 mins)
+    [knn model][Fold  4/10] val score: 2.49367 (0.00 mins)
+    [knn model][Fold  5/10] val score: 2.28103 (0.00 mins)
+    [knn model][Fold  6/10] val score: 2.46119 (0.00 mins)
+    [knn model][Fold  7/10] val score: 2.53110 (0.00 mins)
+    [knn model][Fold  8/10] val score: 2.41599 (0.00 mins)
+    [knn model][Fold  9/10] val score: 2.20619 (0.00 mins)
+    [knn model][Fold 10/10] val score: 2.67219 (0.00 mins)
+    
+    [knn model] val avg score: 2.50485 (0.00 mins)
+    [knn model] test score: 2.65570
+    
+    [xgb model] start
+    [xgb model][Fold  1/10] val score: 2.25847 (0.00 mins)
+    [xgb model][Fold  2/10] val score: 2.18585 (0.02 mins)
+    [xgb model][Fold  3/10] val score: 1.83211 (0.02 mins)
+    [xgb model][Fold  4/10] val score: 2.06447 (0.02 mins)
+    [xgb model][Fold  5/10] val score: 1.69255 (0.02 mins)
+    [xgb model][Fold  6/10] val score: 1.96922 (0.02 mins)
+    [xgb model][Fold  7/10] val score: 2.02238 (0.02 mins)
+    [xgb model][Fold  8/10] val score: 1.81279 (0.02 mins)
+    [xgb model][Fold  9/10] val score: 1.75044 (0.02 mins)
+    [xgb model][Fold 10/10] val score: 2.32899 (0.02 mins)
+    
+    [xgb model] val avg score: 1.99173 (0.17 mins)
+    [xgb model] test score: 2.08580
+    
+    [lgb model] start
+    [lgb model][Fold  1/10] val score: 2.34439 (0.00 mins)
+    [lgb model][Fold  2/10] val score: 2.11244 (0.00 mins)
+    [lgb model][Fold  3/10] val score: 1.92748 (0.00 mins)
+    [lgb model][Fold  4/10] val score: 2.12851 (0.00 mins)
+    [lgb model][Fold  5/10] val score: 1.69015 (0.00 mins)
+    [lgb model][Fold  6/10] val score: 1.94513 (0.00 mins)
+    [lgb model][Fold  7/10] val score: 2.06381 (0.00 mins)
+    [lgb model][Fold  8/10] val score: 1.80189 (0.00 mins)
+    [lgb model][Fold  9/10] val score: 1.64549 (0.00 mins)
+    [lgb model][Fold 10/10] val score: 2.23498 (0.00 mins)
+    
+    [lgb model] val avg score: 1.98943 (0.03 mins)
+    [lgb model] test score: 2.01156
+    
+    [cat model] start
+    [cat model][Fold  1/10] val score: 2.38051 (0.28 mins)
+    [cat model][Fold  2/10] val score: 2.16901 (0.28 mins)
+    [cat model][Fold  3/10] val score: 1.84924 (0.30 mins)
+    [cat model][Fold  4/10] val score: 2.08814 (0.32 mins)
+    [cat model][Fold  5/10] val score: 1.71467 (0.30 mins)
+    [cat model][Fold  6/10] val score: 1.96541 (0.30 mins)
+    [cat model][Fold  7/10] val score: 1.99999 (0.28 mins)
+    [cat model][Fold  8/10] val score: 1.82161 (0.28 mins)
+    [cat model][Fold  9/10] val score: 1.71226 (0.30 mins)
+    [cat model][Fold 10/10] val score: 2.31056 (0.27 mins)
+    
+    [cat model] val avg score: 2.00114 (2.98 mins)
+    [cat model] test score: 2.02935
+    
+    [meta model] start
+    [meta model][Fold  1/10] val score: 2.29346 (0.00 mins)
+    [meta model][Fold  2/10] val score: 2.12516 (0.00 mins)
+    [meta model][Fold  3/10] val score: 1.85332 (0.00 mins)
+    [meta model][Fold  4/10] val score: 2.07036 (0.00 mins)
+    [meta model][Fold  5/10] val score: 1.66167 (0.00 mins)
+    [meta model][Fold  6/10] val score: 1.91915 (0.00 mins)
+    [meta model][Fold  7/10] val score: 2.00331 (0.00 mins)
+    [meta model][Fold  8/10] val score: 1.77216 (0.00 mins)
+    [meta model][Fold  9/10] val score: 1.68300 (0.00 mins)
+    [meta model][Fold 10/10] val score: 2.23850 (0.00 mins)
+    
+    [meta model] val avg score: 1.96201 (0.00 mins)
+    [meta model] test score: 2.00634
 
 
 
 ```python
-for m in train_result:
-    print("[{}] train score: {:.5f} ({:.2f} mins)".format(m, train_result[m]['train']['score'], train_result[m]['train']['time']))
-    #for i, fold in enumerate(train_result[m]['valid']):
-    #    print("[{}][{}] valid score: {:.5f} ({:.2f} mins)".format(m, i+1, fold['score'], fold['time']))
-    print("[{}] avg valid score: {:.5f}".format(m, pd.DataFrame(train_result[m]['valid'])['score'].mean()))
-    print("[{}] test score: {:.5f}\n".format(m, train_result[m]['test']))
-    
+movie_pred.test_meta()['score'], movie_pred_vanilla.test_meta()['score']
 ```
 
-    [knn] train score: 2.08433 (0.00 mins)
-    [knn] avg valid score: 2.50596
-    [knn] test score: 2.64758
-    
-    [xgb] train score: 0.82146 (6.35 mins)
-    [xgb] avg valid score: 1.89630
-    [xgb] test score: 2.08754
-    
-    [lgb] train score: 1.26540 (0.67 mins)
-    [lgb] avg valid score: 1.93835
-    [lgb] test score: 2.09008
-    
-    [cat] train score: 1.46971 (14.75 mins)
-    [cat] avg valid score: 1.95675
-    [cat] test score: 2.06959
-    
+
+
+
+    (1.8911193639405444, 2.006337509637189)
+
 
 
 
 ```python
 add_feats=['log_budget', 'log_popularity']
 
-movie_reg.test_meta()['score'], movie_reg.test_meta(add_feats=add_feats)['score']
+movie_pred.test_meta()['score'], movie_pred.test_meta(add_feats=add_feats)['score']
 ```
 
 
 
 
-    (2.0486911953388858, 2.0438489715948593)
+    (1.8911193639405444, 1.8911193639405444)
 
 
 
@@ -2106,26 +2188,12 @@ movie_reg.test_meta(stack=['xgb'])['score'], movie_reg.test_meta(stack=['xgb'], 
 ```
 
 
-
-
-    (2.088351607428507, 2.0863558069807238)
-
-
-
-
 ```python
 stack=['xgb','lgb']
 add_feats=['log_budget', 'log_popularity']
 
 movie_reg.test_meta(stack=stack)['score'], movie_reg.test_meta(stack=stack, add_feats=add_feats)['score']
 ```
-
-
-
-
-    (2.0603749072852593, 2.0584113102786303)
-
-
 
 
 ```python
@@ -2136,13 +2204,6 @@ movie_reg.test_meta(stack=stack)['score'], movie_reg.test_meta(stack=stack, add_
 ```
 
 
-
-
-    (2.0626728597167925, 2.0600813131090585)
-
-
-
-
 ```python
 stack=['xgb','lgb', 'cat']
 add_feats=['log_budget', 'log_popularity']
@@ -2151,26 +2212,9 @@ movie_reg.test_meta(stack=stack)['score'], movie_reg.test_meta(stack=stack, add_
 ```
 
 
-
-
-    (2.048765932378094, 2.04412595089169)
-
-
-
-
 ```python
 movie_reg.test()
 ```
-
-
-
-
-    {'knn': 2.6475774808608494,
-     'xgb': 2.0875418378962687,
-     'lgb': 2.0900807692562084,
-     'cat': 2.0695926334817414}
-
-
 
 
 ```python
@@ -2179,135 +2223,22 @@ meta_preds.head()
 ```
 
 
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>revenue</th>
-    </tr>
-    <tr>
-      <th>id</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>3001</th>
-      <td>5.999989e+07</td>
-    </tr>
-    <tr>
-      <th>3002</th>
-      <td>1.256172e+06</td>
-    </tr>
-    <tr>
-      <th>3003</th>
-      <td>3.293025e+06</td>
-    </tr>
-    <tr>
-      <th>3004</th>
-      <td>1.915197e+06</td>
-    </tr>
-    <tr>
-      <th>3005</th>
-      <td>1.309963e+06</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
 ```python
 meta_preds.to_csv("submission_stacked.csv")
 pd.read_csv("submission_stacked.csv".format(m)).head(5)
 ```
 
 
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>id</th>
-      <th>revenue</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>3001</td>
-      <td>5.999989e+07</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>3002</td>
-      <td>1.256172e+06</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3003</td>
-      <td>3.293025e+06</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3004</td>
-      <td>1.915197e+06</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>3005</td>
-      <td>1.309963e+06</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
 ```python
 
-preds = movie_reg.predict(ds_test_kaggle)
+preds = movie_pred.predict(ds_test_kaggle)
 
 for m in preds: 
     p = preds[[m]].rename(columns={m:'revenue'})
     p.to_csv("submission_{}.csv".format(m))
     print("submission_{}.csv\n{}\n".format(m, p.head()))
     
-
-meta_p = movie_reg.predict_meta(ds_test_kaggle, add_feats=add_feats)
+meta_p = movie_pred.predict_meta(ds_test_kaggle)
 
 meta_p.to_csv("submission_stacked.csv")
 
@@ -2318,39 +2249,53 @@ pd.read_csv("submission_stacked.csv").head()
     submission_knn.csv
                revenue
     id                
-    3001  5.517532e+06
-    3002  1.346190e+07
+    3001  2.567042e+05
+    3002  1.629675e+07
     3003  6.125836e+05
-    3004  1.145506e+07
-    3005  2.252262e+05
+    3004  2.830188e+06
+    3005  2.914570e+05
     
     submission_xgb.csv
                revenue
     id                
-    3001  9.684370e+07
-    3002  1.224628e+06
-    3003  3.768918e+06
-    3004  1.037579e+06
-    3005  2.232792e+06
+    3001  8.748702e+06
+    3002  2.350722e+06
+    3003  3.401048e+06
+    3004  4.407317e+05
+    3005  1.418032e+06
     
     submission_lgb.csv
                revenue
     id                
-    3001  1.594823e+07
-    3002  7.385629e+05
-    3003  1.801145e+06
-    3004  8.645131e+06
-    3005  7.051149e+05
+    3001  1.744732e+07
+    3002  5.312156e+06
+    3003  2.950232e+06
+    3004  5.375662e+05
+    3005  8.376373e+05
     
     submission_cat.csv
                revenue
     id                
-    3001  8.618598e+07
-    3002  5.683990e+06
-    3003  7.541188e+06
-    3004  1.336553e+06
-    3005  6.802918e+05
+    3001  1.555703e+07
+    3002  8.976856e+05
+    3003  4.640500e+06
+    3004  2.067301e+06
+    3005  6.377184e+05
     
+    
+    [meta model] start
+    [meta model][Fold  1/10] val score: 2.17808 (0.00 mins)
+    [meta model][Fold  2/10] val score: 2.01831 (0.00 mins)
+    [meta model][Fold  3/10] val score: 1.83880 (0.00 mins)
+    [meta model][Fold  4/10] val score: 2.00307 (0.00 mins)
+    [meta model][Fold  5/10] val score: 1.62782 (0.00 mins)
+    [meta model][Fold  6/10] val score: 1.87774 (0.00 mins)
+    [meta model][Fold  7/10] val score: 1.97089 (0.00 mins)
+    [meta model][Fold  8/10] val score: 1.70127 (0.00 mins)
+    [meta model][Fold  9/10] val score: 1.74193 (0.00 mins)
+    [meta model][Fold 10/10] val score: 2.00366 (0.00 mins)
+    
+    [meta model] val avg score: 1.89616 (0.00 mins)
 
 
 
@@ -2382,27 +2327,27 @@ pd.read_csv("submission_stacked.csv").head()
     <tr>
       <th>0</th>
       <td>3001</td>
-      <td>6.707117e+07</td>
+      <td>1.350291e+07</td>
     </tr>
     <tr>
       <th>1</th>
       <td>3002</td>
-      <td>1.269512e+06</td>
+      <td>1.291857e+06</td>
     </tr>
     <tr>
       <th>2</th>
       <td>3003</td>
-      <td>3.323810e+06</td>
+      <td>4.205988e+06</td>
     </tr>
     <tr>
       <th>3</th>
       <td>3004</td>
-      <td>1.795603e+06</td>
+      <td>1.124882e+06</td>
     </tr>
     <tr>
       <th>4</th>
       <td>3005</td>
-      <td>1.256354e+06</td>
+      <td>8.368326e+05</td>
     </tr>
   </tbody>
 </table>
@@ -2414,15 +2359,15 @@ pd.read_csv("submission_stacked.csv").head()
 ```python
 
 #!kaggle competitions submit -c tmdb-box-office-prediction -f submission_knn.csv -m "knn_f3"
-#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_xgb.csv -m "xgb_f3"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_xgb.csv -m "xgb_f4"
 #!kaggle competitions submit -c tmdb-box-office-prediction -f submission_lgb.csv -m "lgb_f3"
 #!kaggle competitions submit -c tmdb-box-office-prediction -f submission_cat.csv -m "cat_f3"
 
-#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_stacked.csv -m "stacked_f3"
+!kaggle competitions submit -c tmdb-box-office-prediction -f submission_stacked.csv -m "stacked_f5"
 
 ```
 
-    100%|████████████████████████████████████████| 100k/100k [00:05<00:00, 17.6kB/s]
+    100%|████████████████████████████████████████| 100k/100k [00:02<00:00, 42.8kB/s]
     Successfully submitted to TMDB Box Office Prediction
 
 
@@ -2489,4 +2434,39 @@ grid_fit = grid_obj.fit(X, y)
 best_reg = grid_fit.best_estimator_
 best_reg
 
+```
+
+## 3. Train the KNN benchmark model based on budget, popularity and runtime
+
+
+```python
+# remove table meta data, column names etc. 
+X = all_data[['log_budget','log_popularity','log_runtime']].values
+y = all_data[['revenue']].values
+
+# create Validation Split
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.01, random_state=16)
+
+# scale
+X_scaler = StandardScaler()
+X_train_scaled  = X_scaler.fit_transform(X_train)
+X_val_scaled    = X_scaler.transform(X_val)
+
+y_train_scaled = np.log1p(y_train)
+
+#create regressor, fit the data
+reg = KNeighborsRegressor().fit(X_train_scaled, y_train_scaled)
+
+#define score function
+def score_function(y_true, y_pred):
+    return np.sqrt(mean_squared_log_error(y_true, y_pred))
+
+# apply the regression model on the prepared train, validation and test set and invert the logarithmic scaling
+y_train_pred  = np.expm1(reg.predict(X_train_scaled))
+y_val_pred    = np.expm1(reg.predict(X_val_scaled))
+#y_test_pred   = inverseY(reg.predict(X_test_scaled))
+
+# print the RMLS error on training & validation 
+print("RMLS Error on Training Dataset:\t", score_function(y_train , y_train_pred), score_function(y_train, y_train_pred))
+print("RMLS Error on Val Dataset:\t", score_function(y_val , y_val_pred), score_function(y_val , y_val_pred))
 ```

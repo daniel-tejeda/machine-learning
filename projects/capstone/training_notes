@@ -1,4 +1,45 @@
-
+"""
+            'xgb': xgb.XGBRegressor(max_depth=6, 
+                                    learning_rate=0.01, 
+                                    n_estimators=10000, 
+                                    eta=0.01,
+                                    objective='reg:linear', 
+                                    gamma=1.45, 
+                                    seed=self.random_seed, 
+                                    silent=True,
+                                    subsample=0.6, 
+                                    colsample_bytree=0.7, 
+                                    colsample_bylevel=0.50,
+                                    eval_metric='rmse'),
+            
+            'lgb': lgb.LGBMRegressor(n_estimators=10000, 
+                                     objective="regression", 
+                                     metric="rmse", 
+                                     num_leaves=20, 
+                                     min_child_samples=100,
+                                     learning_rate=0.01, 
+                                     bagging_fraction=0.8, 
+                                     feature_fraction=0.8, 
+                                     bagging_frequency=1, 
+                                     bagging_seed=self.random_seed, 
+                                     subsample=.9, 
+                                     colsample_bytree=.9,
+                                     use_best_model=True),
+            
+            'cat': cat.CatBoostRegressor(iterations=10000, 
+                                         learning_rate=0.01, 
+                                         depth=5, 
+                                         eval_metric='RMSE',
+                                         colsample_bylevel=0.7,
+                                         bagging_temperature = 0.2,
+                                         metric_period = None,
+                                         early_stopping_rounds=200,
+                                         random_seed=self.random_seed),
+            
+        """
+        
+        
+        
 10 fold 
 No budget, popularity, runtime (only logs)
 
@@ -373,3 +414,25 @@ test kaggle: 1.88292
 [cat] train score: 1.47263 (17.48 mins)
 [cat] avg valid score: 1.94498
 [cat] test score: 2.06039
+
+
+--------------------------------------------------------------
+
+{'xgb': XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+        colsample_bynode=1, colsample_bytree=1, eval_metric='rmse', gamma=0,
+        importance_type='gain', learning_rate=0.05, max_delta_step=0,
+        max_depth=30, min_child_weight=6, missing=None, n_estimators=200,
+        n_jobs=1, nthread=None, objective='reg:linear', random_state=0,
+        reg_alpha=0, reg_lambda=1, scale_pos_weight=1, seed=681,
+        silent=True, subsample=1, verbosity=1),
+ 'lgb': LGBMRegressor(bagging_seed=681, boosting_type='gbdt', class_weight=None,
+        colsample_bytree=1.0, importance_type='split', learning_rate=0.05,
+        max_depth=50, metric='rmse', min_child_samples=20,
+        min_child_weight=0.001, min_split_gain=0.0, n_estimators=200,
+        n_jobs=-1, num_leaves=300, objective='regression',
+        random_state=None, reg_alpha=0.0, reg_lambda=0.0, silent=True,
+        subsample=1.0, subsample_for_bin=200000, subsample_freq=0,
+        use_best_model=True),
+ 'cat': <catboost.core.CatBoostRegressor at 0x7f6a188bae10>}
+ 
+ 
