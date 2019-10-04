@@ -1,0 +1,375 @@
+
+10 fold 
+No budget, popularity, runtime (only logs)
+
+[knn model] start
+[knn model][Fold 1/10] end | val score: 2.35011 (0.00m)
+[knn model][Fold 2/10] end | val score: 2.35428 (0.00m)
+[knn model][Fold 3/10] end | val score: 2.34774 (0.00m)
+[knn model][Fold 4/10] end | val score: 2.46138 (0.00m)
+[knn model][Fold 5/10] end | val score: 2.50539 (0.00m)
+[knn model][Fold 6/10] end | val score: 2.50079 (0.00m)
+[knn model][Fold 7/10] end | val score: 2.47122 (0.00m)
+[knn model][Fold 8/10] end | val score: 2.25709 (0.00m)
+[knn model][Fold 9/10] end | val score: 2.54805 (0.00m)
+[knn model][Fold 10/10] end | val score: 2.68833 (0.00m)
+[knn model] () end | val avg score: 2.44844 (0.03m)
+
+[xgb model] start
+[xgb model][Fold 1/10] end | val score: 1.77387 (2.55m)
+[xgb model][Fold 2/10] end | val score: 1.86279 (1.62m)
+[xgb model][Fold 3/10] end | val score: 1.90797 (0.45m)
+[xgb model][Fold 4/10] end | val score: 1.81834 (2.22m)
+[xgb model][Fold 5/10] end | val score: 1.87266 (1.27m)
+[xgb model][Fold 6/10] end | val score: 1.85605 (0.62m)
+[xgb model][Fold 7/10] end | val score: 1.81715 (0.77m)
+[xgb model][Fold 8/10] end | val score: 1.80919 (0.60m)
+[xgb model][Fold 9/10] end | val score: 1.98962 (0.58m)
+[xgb model][Fold 10/10] end | val score: 2.26469 (1.37m)
+[xgb model] () end | val avg score: 1.89723 (12.12m)
+
+[lgb model] start
+[lgb model][Fold 1/10] end | val score: 1.87006 (0.07m)
+[lgb model][Fold 2/10] end | val score: 1.95041 (0.10m)
+[lgb model][Fold 3/10] end | val score: 1.87210 (0.05m)
+[lgb model][Fold 4/10] end | val score: 1.86699 (0.08m)
+[lgb model][Fold 5/10] end | val score: 1.81368 (0.07m)
+[lgb model][Fold 6/10] end | val score: 1.99857 (0.02m)
+[lgb model][Fold 7/10] end | val score: 1.84689 (0.08m)
+[lgb model][Fold 8/10] end | val score: 1.86737 (0.05m)
+[lgb model][Fold 9/10] end | val score: 2.02196 (0.03m)
+[lgb model][Fold 10/10] end | val score: 2.21150 (0.10m)
+[lgb model] () end | val avg score: 1.93195 (0.73m)
+
+[cat model] start
+[cat model][Fold 1/10] end | val score: 1.83023 (2.17m)
+[cat model][Fold 2/10] end | val score: 1.96739 (0.40m)
+[cat model][Fold 3/10] end | val score: 1.87996 (2.42m)
+[cat model][Fold 4/10] end | val score: 1.90550 (2.35m)
+[cat model][Fold 5/10] end | val score: 2.10196 (0.47m)
+[cat model][Fold 6/10] end | val score: 1.92200 (1.68m)
+[cat model][Fold 7/10] end | val score: 1.99695 (0.35m)
+[cat model][Fold 8/10] end | val score: 1.93943 (0.27m)
+[cat model][Fold 9/10] end | val score: 2.00152 (1.65m)
+[cat model][Fold 10/10] end | val score: 2.29285 (2.45m)
+[cat model] () end | val avg score: 1.98378 (14.28m)
+
+
+'train': {'score': 1.4397358054643237, 'time': 14.283333333333333}}}
+
+
+[knn] test score: 2.58362
+[xgb] test score: 2.04712
+[lgb] test score: 2.11321
+[cat] test score: 2.12412
+
+Kaggle
+cat_t3 1.92961
+lgb_t3 1.92721
+xgb_t3 1.90634
+knn_t3 2.57454
+
+
+-----------------------------------------------------
+5 fold 
+no budget, popularity, runtime (only logs)
+
+[knn] train score: 2.10529 (0.02 mins)
+[knn][1] valid score: 2.32979 (0.00 mins)
+[knn][2] valid score: 2.41774 (0.00 mins)
+[knn][3] valid score: 2.48511 (0.00 mins)
+[knn][4] valid score: 2.38250 (0.00 mins)
+[knn][5] valid score: 2.62017 (0.00 mins)
+[knn] avg validation score: 2.44706
+
+[xgb] train score: 1.23243 (4.78 mins)
+[xgb][1] valid score: 1.83998 (1.63 mins)
+[xgb][2] valid score: 1.87156 (1.32 mins)
+[xgb][3] valid score: 1.90367 (0.77 mins)
+[xgb][4] valid score: 1.82413 (0.52 mins)
+[xgb][5] valid score: 2.15553 (0.53 mins)
+[xgb] avg validation score: 1.91897
+
+[lgb] train score: 1.48127 (0.30 mins)
+[lgb][1] valid score: 1.91768 (0.05 mins)
+[lgb][2] valid score: 1.88278 (0.08 mins)
+[lgb][3] valid score: 1.93305 (0.07 mins)
+[lgb][4] valid score: 1.89338 (0.03 mins)
+[lgb][5] valid score: 2.15117 (0.05 mins)
+[lgb] avg validation score: 1.95561
+
+[cat] train score: 1.88149 (7.05 mins)
+[cat][1] valid score: 1.86033 (2.32 mins)
+[cat][2] valid score: 2.04270 (0.45 mins)
+[cat][3] valid score: 1.90475 (2.32 mins)
+[cat][4] valid score: 1.91563 (1.43 mins)
+[cat][5] valid score: 2.25999 (0.50 mins)
+[cat] avg validation score: 1.99668
+
+
+[knn] test score: 2.57639
+[xgb] test score: 2.07113
+[lgb] test score: 2.15230
+[cat] test score: 2.19743
+
+Kaggle
+cat_t4 2.10927
+lgb_t4 1.93908
+xgb_t4 1.91689
+knn_t4 2.58220
+
+
+-----------------------------------------------------
+10 fold 
+no budget, popularity, runtime (only logs)
+
+[knn] train score: 2.05908 (0.03 mins)
+[knn][1] valid score: 2.35011 (0.00 mins)
+[knn][2] valid score: 2.35428 (0.00 mins)
+[knn][3] valid score: 2.34774 (0.00 mins)
+[knn][4] valid score: 2.46138 (0.00 mins)
+[knn][5] valid score: 2.50539 (0.00 mins)
+[knn][6] valid score: 2.50079 (0.00 mins)
+[knn][7] valid score: 2.47122 (0.00 mins)
+[knn][8] valid score: 2.25709 (0.00 mins)
+[knn][9] valid score: 2.54805 (0.00 mins)
+[knn][10] valid score: 2.68833 (0.00 mins)
+[knn] avg validation score: 2.44844
+
+[xgb] train score: 0.86046 (12.10 mins)
+[xgb][1] valid score: 1.77387 (2.53 mins)
+[xgb][2] valid score: 1.86279 (1.60 mins)
+[xgb][3] valid score: 1.90797 (0.45 mins)
+[xgb][4] valid score: 1.81834 (2.22 mins)
+[xgb][5] valid score: 1.87266 (1.28 mins)
+[xgb][6] valid score: 1.85605 (0.60 mins)
+[xgb][7] valid score: 1.81715 (0.77 mins)
+[xgb][8] valid score: 1.80919 (0.60 mins)
+[xgb][9] valid score: 1.98962 (0.60 mins)
+[xgb][10] valid score: 2.26469 (1.38 mins)
+[xgb] avg validation score: 1.89723
+
+[lgb] train score: 1.15884 (0.73 mins)
+[lgb][1] valid score: 1.87006 (0.07 mins)
+[lgb][2] valid score: 1.95041 (0.10 mins)
+[lgb][3] valid score: 1.87210 (0.05 mins)
+[lgb][4] valid score: 1.86699 (0.08 mins)
+[lgb][5] valid score: 1.81368 (0.07 mins)
+[lgb][6] valid score: 1.99857 (0.02 mins)
+[lgb][7] valid score: 1.84689 (0.08 mins)
+[lgb][8] valid score: 1.86737 (0.05 mins)
+[lgb][9] valid score: 2.02196 (0.03 mins)
+[lgb][10] valid score: 2.21150 (0.10 mins)
+[lgb] avg validation score: 1.93195
+
+[cat] train score: 1.43974 (14.52 mins)
+[cat][1] valid score: 1.83023 (2.40 mins)
+[cat][2] valid score: 1.96739 (0.42 mins)
+[cat][3] valid score: 1.87996 (2.50 mins)
+[cat][4] valid score: 1.90550 (2.40 mins)
+[cat][5] valid score: 2.10196 (0.50 mins)
+[cat][6] valid score: 1.92200 (1.62 mins)
+[cat][7] valid score: 1.99695 (0.35 mins)
+[cat][8] valid score: 1.93943 (0.28 mins)
+[cat][9] valid score: 2.00152 (1.58 mins)
+[cat][10] valid score: 2.29285 (2.38 mins)
+[cat] avg validation score: 1.98378
+
+[knn] test score: 2.58362
+[xgb] test score: 2.04712
+[lgb] test score: 2.11321
+[cat] test score: 2.12412
+
+cat_t5 1.92961
+lgb_t5 1.92721
+xgb_t5 1.90634
+knn_t5 2.57454
+
+
+-----------------------------------------------------
+10 fold 
+with budget, popularity, runtime (+ logs)
+
+[knn] train score: 1.90140 (0.02 mins)
+[knn][1] valid score: 2.10697 (0.00 mins)
+[knn][2] valid score: 2.49304 (0.00 mins)
+[knn][3] valid score: 2.08679 (0.00 mins)
+[knn][4] valid score: 2.22738 (0.00 mins)
+[knn][5] valid score: 2.28644 (0.00 mins)
+[knn][6] valid score: 2.31774 (0.00 mins)
+[knn][7] valid score: 2.26073 (0.00 mins)
+[knn][8] valid score: 2.13334 (0.00 mins)
+[knn][9] valid score: 2.26427 (0.00 mins)
+[knn][10] valid score: 2.59218 (0.00 mins)
+[knn] avg validation score: 2.27689
+
+[xgb] train score: 0.87928 (9.68 mins)
+[xgb][1] valid score: 1.77819 (1.45 mins)
+[xgb][2] valid score: 1.85651 (1.22 mins)
+[xgb][3] valid score: 1.89029 (0.52 mins)
+[xgb][4] valid score: 1.82026 (1.75 mins)
+[xgb][5] valid score: 1.87709 (1.25 mins)
+[xgb][6] valid score: 1.83985 (0.70 mins)
+[xgb][7] valid score: 1.78450 (0.60 mins)
+[xgb][8] valid score: 1.79357 (0.57 mins)
+[xgb][9] valid score: 1.97517 (0.45 mins)
+[xgb][10] valid score: 2.23904 (1.10 mins)
+[xgb] avg validation score: 1.88545
+
+[lgb] train score: 1.15217 (0.72 mins)
+[lgb][1] valid score: 1.89853 (0.05 mins)
+[lgb][2] valid score: 1.97224 (0.03 mins)
+[lgb][3] valid score: 1.88319 (0.03 mins)
+[lgb][4] valid score: 1.87306 (0.08 mins)
+[lgb][5] valid score: 1.79994 (0.10 mins)
+[lgb][6] valid score: 1.97961 (0.05 mins)
+[lgb][7] valid score: 1.87997 (0.08 mins)
+[lgb][8] valid score: 1.86974 (0.05 mins)
+[lgb][9] valid score: 2.01873 (0.03 mins)
+[lgb][10] valid score: 2.20700 (0.12 mins)
+[lgb] avg validation score: 1.93820
+
+[cat] train score: 1.58673 (13.67 mins)
+[cat][1] valid score: 1.83214 (2.10 mins)
+[cat][2] valid score: 1.96574 (0.68 mins)
+[cat][3] valid score: 1.94738 (0.63 mins)
+[cat][4] valid score: 1.90633 (2.40 mins)
+[cat][5] valid score: 2.08277 (0.40 mins)
+[cat][6] valid score: 1.90574 (2.40 mins)
+[cat][7] valid score: 1.89476 (1.42 mins)
+[cat][8] valid score: 1.92725 (0.35 mins)
+[cat][9] valid score: 1.99786 (1.72 mins)
+[cat][10] valid score: 2.31432 (1.48 mins)
+[cat] avg validation score: 1.97743
+
+[knn] test score: 2.44226
+[xgb] test score: 2.05107
+[lgb] test score: 2.11545
+[cat] test score: 2.13766
+
+
+
+------------------------------------------------
+
+[knn] train score: 2.05908 (0.03 mins)
+[knn][1] valid score: 2.35011 (0.00 mins)
+[knn][2] valid score: 2.35428 (0.00 mins)
+[knn][3] valid score: 2.34774 (0.00 mins)
+[knn][4] valid score: 2.46138 (0.00 mins)
+[knn][5] valid score: 2.50539 (0.00 mins)
+[knn][6] valid score: 2.50079 (0.00 mins)
+[knn][7] valid score: 2.47122 (0.00 mins)
+[knn][8] valid score: 2.25709 (0.00 mins)
+[knn][9] valid score: 2.54805 (0.00 mins)
+[knn][10] valid score: 2.68833 (0.00 mins)
+[knn] avg valid score: 2.44844
+[knn] test score: 2.58362
+
+[xgb] train score: 0.93640 (10.08 mins)
+[xgb][1] valid score: 1.80320 (1.80 mins)
+[xgb][2] valid score: 1.84839 (1.25 mins)
+[xgb][3] valid score: 1.92092 (0.53 mins)
+[xgb][4] valid score: 1.82925 (1.62 mins)
+[xgb][5] valid score: 1.87835 (1.32 mins)
+[xgb][6] valid score: 1.86998 (0.67 mins)
+[xgb][7] valid score: 1.80135 (0.72 mins)
+[xgb][8] valid score: 1.80866 (0.60 mins)
+[xgb][9] valid score: 1.98268 (0.55 mins)
+[xgb][10] valid score: 2.24995 (0.95 mins)
+[xgb] avg valid score: 1.89927
+[xgb] test score: 2.06271
+
+[lgb] train score: 1.15884 (0.73 mins)
+[lgb][1] valid score: 1.87006 (0.07 mins)
+[lgb][2] valid score: 1.95041 (0.12 mins)
+[lgb][3] valid score: 1.87210 (0.05 mins)
+[lgb][4] valid score: 1.86699 (0.08 mins)
+[lgb][5] valid score: 1.81368 (0.07 mins)
+[lgb][6] valid score: 1.99857 (0.02 mins)
+[lgb][7] valid score: 1.84689 (0.08 mins)
+[lgb][8] valid score: 1.86737 (0.05 mins)
+[lgb][9] valid score: 2.02196 (0.03 mins)
+[lgb][10] valid score: 2.21150 (0.10 mins)
+[lgb] avg valid score: 1.93195
+[lgb] test score: 2.11321
+
+[cat] train score: 1.43974 (13.75 mins)
+[cat][1] valid score: 1.83023 (2.12 mins)
+[cat][2] valid score: 1.96739 (0.42 mins)
+[cat][3] valid score: 1.87996 (2.25 mins)
+[cat][4] valid score: 1.90550 (2.28 mins)
+[cat][5] valid score: 2.10196 (0.48 mins)
+[cat][6] valid score: 1.92200 (1.52 mins)
+[cat][7] valid score: 1.99695 (0.33 mins)
+[cat][8] valid score: 1.93943 (0.28 mins)
+[cat][9] valid score: 2.00152 (1.57 mins)
+[cat][10] valid score: 2.29285 (2.42 mins)
+[cat] avg valid score: 1.98378
+[cat] test score: 2.12412
+
+meta model
+'test score': 2.048952806005707
+
+test kaggle: 1.88292
+
+---------------------------------------------------
+
+10 fold - limited 1-hot-encoded cols (236 feats)
+
+
+[knn] train score: 2.08433 (0.00 mins)
+[knn] avg valid score: 2.50596
+[knn] test score: 2.64758
+
+[xgb] train score: 0.82146 (6.35 mins)
+[xgb] avg valid score: 1.89630
+[xgb] test score: 2.08754
+
+[lgb] train score: 1.26540 (0.67 mins)
+[lgb] avg valid score: 1.93835
+[lgb] test score: 2.09008
+
+[cat] train score: 1.46971 (14.75 mins)
+[cat] avg valid score: 1.95675
+[cat] test score: 2.06959
+
+
+---------------------------------------------------
+
+5 fold - limited 1-hot-encoded cols (153 feats)
+
+[knn] train score: 2.12289 (0.00 mins)
+[knn] avg valid score: 2.49608
+[knn] test score: 2.63318
+
+[xgb] train score: 1.18625 (1.37 mins)
+[xgb] avg valid score: 1.96001
+[xgb] test score: 1.93542
+
+[lgb] train score: 1.33339 (0.33 mins)
+[lgb] avg valid score: 1.98486
+[lgb] test score: 2.02936
+
+[cat] train score: 1.88892 (7.55 mins)
+[cat] avg valid score: 1.99702
+[cat] test score: 2.04835
+
+---------------------------------------------------
+
+10 fold (153 feats)
+
+[knn] train score: 2.08474 (0.00 mins)
+[knn] avg valid score: 2.50503
+[knn] test score: 2.64809
+
+[xgb] train score: 0.86686 (3.98 mins)
+[xgb] avg valid score: 1.89142
+[xgb] test score: 2.08589
+
+[lgb] train score: 1.26540 (0.68 mins)
+[lgb] avg valid score: 1.93835
+[lgb] test score: 2.09008
+
+[cat] train score: 1.47263 (17.48 mins)
+[cat] avg valid score: 1.94498
+[cat] test score: 2.06039
