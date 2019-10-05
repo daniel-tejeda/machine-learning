@@ -40,8 +40,6 @@ The original dataset contains three files:
 The Test dataset does not have the target variable in it because of the nature of Kaggle competitions, so we discarded them and split the Train set 80/10/10 for training, validation (10-fold cross validation) and test. 
 
 
-
-
 #### Input Features
 
 - **ID**. Integer unique id of each movie
@@ -262,25 +260,28 @@ Out of curiosity, I wanted to know which movies were the top 10 of this dataset:
 
 ### Exploratory Visualization
 
-My first step was to look at the distribution of the target variable `revenue`. The following figure (left) shows that the distribution is quite skewed. I used log transformation to deal with this, as shown on the right plot.
+My first step was to look at the distribution of the target variable `revenue`. Figure 1 shows that the distribution is quite skewed. I used log transformation to deal with this, as shown in Figure 2.
 
-![png](img/output_12_0.png)
+![png](img/output_14_0.png)
 
-My next step was to review the correlation of the three quantitative features and the target variable `revenue`. This is shown in the following scatter matrix.
+My next step was to review the correlation of the three quantitative features and the target variable `revenue`. This is shown in Figure 3.
 
-![png](img/output_13_0.png)
+![png](img/output_16_0.png)
 
-Makes sense that budget is the feature that shows more correlation with revenue. Another visualization in the following heatmap.
-<center><img src="img/output_16_1.png" /></center>
-<center>Correlation between quantitative variables</center><p/>
+Makes sense that budget is the feature that shows more correlation with revenue. Another visualization in Figure 4.
 
-I also wanted to get a sense of how the dataset was distributed throughout the years. The following figure shows the movies released per year. It clearly shows that from 1921-1976 the amount of data is consistently low and starts to get better in the 90's. The year with the highest number of released movies is 2013 with 141 movies in the dataset.
+![png](img/output_17_0.png)
 
-![png](img/output_18_0.png)
 
-Some more visualizations of Revenue vs Budget. Mean and total revenue per year and finally the mean runtime by year. 
+I also wanted to get a sense of how the dataset was distributed throughout the years. Figure 5 shows the movies released per year. It clearly shows that from 1921-1976 the amount of data is consistently low and starts to get better in the 90's. The year with the highest number of released movies is 2013 with 141 movies in the dataset.
 
-![png](img/output_19_0.png)
+![png](img/output_22_1.png)
+
+Some more visualizations of Revenue vs Budget. Mean (Figure 6) and total (Figure 7) revenue vs budget per year and finally the mean runtime by year is shown in Figure 8. 
+
+![png](img/output_23_0.png)
+![png](img/output_23_1.png)
+![png](img/output_23_2.png)
 
 After all these plots were produced, I concluded that `runtime` seems to be the less correlated variable among the quantiative features to `budget`.
 
@@ -290,12 +291,12 @@ Among the machine learning methods used in practice, Gradient Boosting Decision 
 
 GBDT is an ensemble model of decision trees, which are trained in sequence [[5]](#5). In each iteration, GBDT learns the decision trees by fitting the negative gradients (also known as residual errors).
 
-There have been quite a few implementations of GBDT in the literature, here I made use of three very popular ones: XGBoost, LightGBM and CatBoost. The following chronological view shows how recent these algorithms were developed and released.
+There have been quite a few implementations of GBDT in the literature, here I made use of three very popular ones: XGBoost, LightGBM and CatBoost. The following chronological view in Fig. 9 shows how recent these algorithms were developed and released.
 
 ![png](img/timeline.png)
 
-<center>
-XGBoost, LightGBM and CatBoost release timeline. Source: <a href="https://towardsdatascience.com/catboost-vs-light-gbm-vs-xgboost-5f93620723db">CatBoost vs. Light GBM vs. XGBoost</a>
+<center><b>
+Fig. 9. XGBoost, LightGBM and CatBoost release timeline. Source: <a href="https://towardsdatascience.com/catboost-vs-light-gbm-vs-xgboost-5f93620723db">CatBoost vs. Light GBM vs. XGBoost</b></a>
 </center><p/>
 
 Out of the three models, XGBoost is the only one that cannot handle categorical values[[3]]. Another structural difference between them is how they build the decision trees. In many GBDTs, building next tree comprises two steps: choosing the tree structure and setting values in leaves after the tree structure is fixed. To choose the best tree structure, the algorithm enumerates through different splits, builds trees with these splits, sets values in the obtained leaves, scores the trees and selects the best split.[[7]](#r7). LightGBM uses a novel technique of Gradient-based One-Side Sampling (GOSS) to filter out the data instances for finding a split value while XGBoost uses pre-sorted algorithm & Histogram-based algorithm for computing the best split. In CatBoost the second phase is performed using traditional GBDT scheme and for the first phase uses a modified version.
@@ -368,6 +369,8 @@ def preprocess_data(in_data):
 
 The model implementation is in class `MovieRevenuePredictor`. This class contains the benchmark, all three GBDT models and the meta-model along with data and methods for training, validating and testing. 
 
+One of the complications I faced initially was the training time as a result of having too many features (2000+) from the unrestricted one-hot encoding. This caused the training time to be high, specially for CatBoost (over 30mins). After removing the ones with low occurrence and evaluate the models, I realize the added features didn't worth the increased training time. That made me implement the minumum count for a value to be encoded as new feature, described in the previous section.
+I also had a hard time when building the stacked model. At first, I thought simple linear regression was not enough and tried Stochastic Gradient Descent regressor, which gave me odd results.  
 
 #### Initialization
 
@@ -422,9 +425,11 @@ Similarly to the base models, I created the methods `train_meta`, `test_meta` an
 
 ### Refinement
 
-I originally started using the default hyperparameters for the base models. They provided very good initial scores but after I had the overall structure I created the `find_best_params` method to have a grid search and results improved. This was a resource intensive task that used almost all 40 cpus in my server. 
+I originally started using the default hyperparameters for the base models. They provided very good initial scores but after I had the overall structure I created the `find_best_params` method to have a grid search and results improved. This was a resource intensive task that used almost all 40 cpus in my server (Fig. 10). 
 
 ![png](img/glances_1.png)
+<center><b>Fig. 10. Resources consumed by Grid Search</b></center>
+<p/>
 
 The resulting best models: 
 
@@ -568,7 +573,7 @@ The final model score as provided by Kaggle was **1.82988** with a different, pr
 
 ### Free-Form Visualization
 
-The top 30, most important features for each of the GBDT models are shown in the following charts.
+The top 30, most important features for each of the GBDT models: XGBoost, LightGBM and CatBoost are shown in Figures 11, 12 and 13 respectively.
 
 ![png](img/output_49_0.png)
 
@@ -576,11 +581,17 @@ There are evident ones like `budget` and `popularity` but I find interesting to 
 
 ### Reflection
 
-In conclusion the results using feature engineering and the straightforward application of well-known gradient boosting algorithms gave very good results, even for the default hyperparameters. It was particularly satisfying because I was not sure initially if I could improve the base models with the stacked one.  
+In conclusion the results using feature engineering and the straightforward application of well-known gradient boosting algorithms gave very good results, even for the default hyperparameters. It was particularly satisfying because I was not sure initially if I could improve the base models with the stacked one. 
 
-The initial challenge was to come up with how to manipulate the features and pre-process the data but once I have that and the basic skeleton of the main class, I could start experiment a lot and get good insights. My initial tests always favored XGBoost, but when I reduced the number of one-hot encoded features I started to get better scores with LightGB and CatBoost. Another unexpected result was the addition of KNN to the stack, which I did by mistake and, even though it was minimal, ended up with a better score. 
+The initial challenge was to come up with how to manipulate the features and pre-process the data but once I have that and the basic skeleton of the main class, I started experimenting a lot and get good insights. My initial tests always favored XGBoost, but when I reduced the number of one-hot encoded features I started to get better scores with LightGB and CatBoost. 
+
+When I finished testing the base models, I wasn't really sure I could improve the score doing a simple linear model so I started trying with SGD regressors but didn't get good results. To my surprise, the final linear model worked like a charm out of the box. Another unexpected result was the addition of KNN to the stack, which I did by mistake and, even though it was minimal, ended up with a better score. 
+
+I added the grid search functionality later, right after I did the stacking part. I was waiting to get the results of the stacked model before doing hyperparameter tuning, which is a more resource intensive task. Surprisingly, the resulted models trained way faster than the ones I initially had.  
 
 Regarding stacking, the simplicity of the linear regression model made me think a lot about a more complex stacking approach like feeding the base algorithms in a recurrent fashion, but I am not really sure if this would be effective given the fact that the meta features are produced with the base models that are already recurrent.  
+
+One of the things I always do when coding is trying to encapsulate and automate as much as possible into classes. This can slow you down at first, because you have to code more lines but it pays off when you just initialize an instance of an object and everything is executed properly. That was the main idea behind creating the MovieRevenuePredictor class: to have the tools to do lots of experimentation with different parameters and keep improving the scores. 
 
 ### Improvement
 

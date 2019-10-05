@@ -320,10 +320,10 @@ original_datasets['train'].describe(include='all')
       <td>NaN</td>
       <td>[{'id': 18, 'name': 'Drama'}]</td>
       <td>http://www.transformersmovie.com/</td>
-      <td>tt0403358</td>
+      <td>tt0092226</td>
       <td>en</td>
-      <td>The Gift</td>
-      <td>In December 1941, Czech soldiers Jozef Gabƒç√≠...</td>
+      <td>Logan</td>
+      <td>An inside look at a West Hollywood cult formed...</td>
       <td>NaN</td>
       <td>...</td>
       <td>9/10/15</td>
@@ -331,10 +331,10 @@ original_datasets['train'].describe(include='all')
       <td>[{'iso_639_1': 'en', 'name': 'English'}]</td>
       <td>Released</td>
       <td>Based on a true story.</td>
-      <td>Black Sheep</td>
+      <td>Beauty and the Beast</td>
       <td>[{'id': 10183, 'name': 'independent film'}]</td>
       <td>[]</td>
-      <td>[{'credit_id': '52fe43639251416c7500e623', 'de...</td>
+      <td>[{'credit_id': '5607a7e19251413050003e2c', 'de...</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -783,9 +783,13 @@ sb.set_style("white")
 fig, axes = plt.subplots(1, 2, figsize = (14,6))
 
 sb.distplot(quant_data['revenue'], bins=20, kde=True, ax=axes[0])
-axes[0].set_title("Revenue")
+axes[0].set_title("Fig. 1. Distribution of target variable", y=-0.2, fontweight="bold")
+axes[0].set_ylabel('record count')
+
 sb.distplot(np.log1p(quant_data['revenue']), bins=40, kde=True, ax=axes[1])
-axes[1].set_title("Log(Revenue)")
+axes[1].set_title("Fig. 2. Distribution of target variable (Log)",  y=-0.2, fontweight="bold")
+axes[1].set_ylabel('record count')
+axes[1].set_xlabel('Log(revenue)')
 
 for ax in axes: ax.grid()
     
@@ -800,7 +804,8 @@ for ax in axes: ax.grid()
 
 ```python
 # scatter matrix for each pair of features in the data
-pd.plotting.scatter_matrix(quant_data, alpha = 0.3, figsize = (16,10));
+pd.plotting.scatter_matrix(quant_data, alpha = 0.3, figsize = (16,10))
+plt.title("Fig. 3. Scatterplot matrix of revenue, runtime, popularity and budget", y=-0.5, x=-1.1, fontweight="bold");
 ```
 
 
@@ -809,20 +814,14 @@ pd.plotting.scatter_matrix(quant_data, alpha = 0.3, figsize = (16,10));
 
 
 ```python
-
-sb.heatmap(quant_data.corr(), annot=True, square=True, linewidths=.5, cmap="YlGnBu")
+ax = plt.axes()
+ax.set_title("Fig. 4. Correlation heatmap of revenue, \nruntime, popularity and budget", y=-0.3, fontweight='bold');
+sb.heatmap(quant_data.corr(), annot=True, square=True, linewidths=.5, cmap="YlGnBu", ax=ax);
 
 ```
 
 
-
-
-    <matplotlib.axes._subplots.AxesSubplot at 0x7fcaf71cc0f0>
-
-
-
-
-![png](output_17_1.png)
+![png](output_17_0.png)
 
 
 ## 2. Data cleansing and feature engineering
@@ -948,9 +947,13 @@ plt.plot(yr_counts.index.values, yr_counts.values)
 #sb.countplot(all_data['rel_year'])
 #plt.xticks(fontsize=12,rotation=90)
 plt.xticks(yr_xticks)
-plt.title("Movies released by year",fontsize=20)
+plt.ylabel('movie count')
+plt.xlabel('year of release')
+plt.title("Fig 5. Movies released by year", fontweight="bold", y=-0.2)
+
 plt.grid()
 yr_counts.sort_values(ascending=False).head()
+
 ```
 
 
@@ -974,29 +977,50 @@ yr_counts.sort_values(ascending=False).head()
 yr_avgs = all_data.groupby('rel_year').mean()
 yr_totals = all_data.groupby('rel_year').sum()
 
-fig, axes = plt.subplots(3, 1, figsize=(14,14))
+plt.figure(figsize=(14, 5))
+plt.title("Fig 6. Mean budget and revenue by release year", fontweight="bold", y=-0.2)
+plt.plot(yr_avgs.index.values, yr_avgs['revenue'], label='Mean revenue')
+plt.plot(yr_avgs.index.values, yr_avgs['budget'], label='Mean budget')
+plt.xticks(yr_xticks)
+plt.xlabel("year of release")
+plt.ylabel("US dollars")
+plt.grid()
+plt.legend()
 
-axes[0].set_title("Mean revenue & budget by year")
-axes[0].plot(yr_avgs.index.values, yr_avgs['revenue'], label='Mean revenue')
-axes[0].plot(yr_avgs.index.values, yr_avgs['budget'], label='Mean budget')
-axes[0].set_xticks(yr_xticks)
 
-axes[1].set_title("Total revenue & budget by year")
-axes[1].plot(yr_totals.index.values, yr_totals['revenue'], label='Total revenue')
-axes[1].plot(yr_totals.index.values, yr_totals['budget'], label='Total budget')
-axes[1].set_xticks(yr_xticks)
+plt.figure(figsize=(14, 5))
+plt.title("Fig 7. Total budget and revenue by release year", fontweight="bold", y=-0.2)
+plt.plot(yr_totals.index.values, yr_totals['revenue'], label='Total revenue')
+plt.plot(yr_totals.index.values, yr_totals['budget'], label='Total budget')
+plt.xticks(yr_xticks)
+plt.xlabel("year of release")
+plt.ylabel("US dollars")
+plt.grid()
+plt.legend()
 
-axes[2].set_title("Mean runtime by year")
-axes[2].plot(yr_avgs.index.values, yr_avgs['runtime'], label='Mean runtime')
-axes[2].set_xticks(yr_xticks)
 
-for ax in axes: 
-    ax.grid()
-    ax.legend()
+plt.figure(figsize=(14, 5))
+plt.title("Fig 8. Mean runtime by release year", fontweight="bold", y=-0.2)
+plt.plot(yr_avgs.index.values, yr_avgs['runtime'], label='Mean runtime')
+plt.xticks(yr_xticks)
+plt.xlabel("year of release")
+plt.ylabel("runtime (minutes)")
+plt.grid()
+plt.legend();
+
+
 ```
 
 
 ![png](output_23_0.png)
+
+
+
+![png](output_23_1.png)
+
+
+
+![png](output_23_2.png)
 
 
 
@@ -1528,7 +1552,7 @@ all_data.shape
 
 
 ```python
-def prepare_data(in_data):
+def preprocess_data(in_data):
     
     #copy
     data = in_data.set_index('id')
@@ -1551,8 +1575,8 @@ def prepare_data(in_data):
 
 
 ```python
-ds_train = prepare_data(original_datasets['train'])
-ds_test_kaggle = prepare_data(original_datasets['test'])
+ds_train = preprocess_data(original_datasets['train'])
+ds_test_kaggle = preprocess_data(original_datasets['test'])
 
 ds_train.shape, ds_train.columns
 ```
@@ -1637,7 +1661,7 @@ class MovieRevenuePredictor():
     
     def find_best_params(self):
         
-        gparams = {
+        self.sgrid_params = {
             
             #'knn': {},
             
@@ -1660,10 +1684,10 @@ class MovieRevenuePredictor():
         
         self.best_models = {}
             
-        for m in gparams:
+        for m, gparam_dict in self.sgrid_params.items():
         
             grid_search = GridSearchCV(self.models[m], 
-                                       param_grid=gparams[m], 
+                                       param_grid=gparam_dict, 
                                        scoring='neg_mean_squared_error',
                                        cv=3, verbose=10, n_jobs=-1)
             
@@ -1775,7 +1799,7 @@ class MovieRevenuePredictor():
     
     def predict(self, X, models=MOD_CLASS['BASE'], prep_data=False):
         
-        X_in = prepare_data(X) if prep_data else X        
+        X_in = preprocess_data(X) if prep_data else X        
         X_in = pd.DataFrame(data=X_in, columns=self.data['train'].columns).fillna(0) 
         X_in = X_in.drop(['revenue'], axis=1).values
         
@@ -1898,26 +1922,26 @@ movie_pred.best_models
 
 
     [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   10.5s remaining:  1.1min
-    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   19.4s remaining:   59.2s
-    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   21.6s remaining:   38.7s
-    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   24.9s remaining:   28.2s
-    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   27.6s remaining:   20.0s
-    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   31.2s remaining:   13.9s
-    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   33.1s remaining:    8.1s
-    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   39.2s remaining:    3.7s
-    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   43.9s finished
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   10.4s remaining:  1.1min
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   18.9s remaining:   57.6s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   21.3s remaining:   38.2s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   24.2s remaining:   27.4s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   27.3s remaining:   19.7s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   31.6s remaining:   14.1s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   33.3s remaining:    8.2s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   38.9s remaining:    3.7s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   42.2s finished
 
 
     Fitting 3 folds for each of 27 candidates, totalling 81 fits
 
 
     [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:    1.4s remaining:    9.0s
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:    1.4s remaining:    8.9s
     [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:    1.5s remaining:    4.5s
     [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:    1.5s remaining:    2.7s
     [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:    1.7s remaining:    1.9s
-    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:    2.9s remaining:    2.1s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:    2.8s remaining:    2.1s
     [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:    2.9s remaining:    1.3s
     [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:    3.0s remaining:    0.7s
     [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:    3.1s remaining:    0.3s
@@ -1928,15 +1952,15 @@ movie_pred.best_models
 
 
     [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   14.1s remaining:  1.5min
-    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   14.6s remaining:   44.7s
-    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   18.6s remaining:   33.4s
-    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   21.0s remaining:   23.8s
-    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   34.6s remaining:   25.0s
-    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   47.8s remaining:   21.3s
-    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   49.7s remaining:   12.2s
-    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   53.3s remaining:    5.0s
-    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   56.8s finished
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   13.8s remaining:  1.5min
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   14.1s remaining:   43.1s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   17.5s remaining:   31.4s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   20.4s remaining:   23.1s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   34.2s remaining:   24.7s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   47.1s remaining:   21.0s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   49.6s remaining:   12.2s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   52.6s remaining:    5.0s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   56.5s finished
 
 
 
@@ -1957,7 +1981,7 @@ movie_pred.best_models
             random_state=None, reg_alpha=0.0, reg_lambda=0.0, silent=True,
             subsample=1.0, subsample_for_bin=200000, subsample_freq=0,
             use_best_model=True),
-     'cat': <catboost.core.CatBoostRegressor at 0x7fcaf7a26400>}
+     'cat': <catboost.core.CatBoostRegressor at 0x7feba4f4eac8>}
 
 
 
@@ -2013,36 +2037,36 @@ movie_pred.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbo
     [xgb model][Fold  7/10] val score: 2.01991 (0.28 mins)
     [xgb model][Fold  8/10] val score: 1.73233 (0.28 mins)
     [xgb model][Fold  9/10] val score: 1.77082 (0.28 mins)
-    [xgb model][Fold 10/10] val score: 2.11173 (0.28 mins)
+    [xgb model][Fold 10/10] val score: 2.11173 (0.30 mins)
     
-    [xgb model] val avg score: 1.94951 (2.90 mins)
+    [xgb model] val avg score: 1.94951 (2.92 mins)
     [xgb model] test score: 1.93643
     
     [lgb model] start
     [lgb model][Fold  1/10] val score: 2.40022 (0.02 mins)
     [lgb model][Fold  2/10] val score: 2.10785 (0.02 mins)
     [lgb model][Fold  3/10] val score: 1.92390 (0.00 mins)
-    [lgb model][Fold  4/10] val score: 2.10143 (0.00 mins)
+    [lgb model][Fold  4/10] val score: 2.10143 (0.02 mins)
     [lgb model][Fold  5/10] val score: 1.71386 (0.02 mins)
-    [lgb model][Fold  6/10] val score: 1.91689 (0.00 mins)
+    [lgb model][Fold  6/10] val score: 1.91689 (0.02 mins)
     [lgb model][Fold  7/10] val score: 2.12366 (0.00 mins)
     [lgb model][Fold  8/10] val score: 1.84078 (0.00 mins)
     [lgb model][Fold  9/10] val score: 1.67658 (0.00 mins)
     [lgb model][Fold 10/10] val score: 2.20239 (0.02 mins)
     
-    [lgb model] val avg score: 2.00076 (0.15 mins)
+    [lgb model] val avg score: 2.00076 (0.17 mins)
     [lgb model] test score: 1.99794
     
     [cat model] start
     [cat model][Fold  1/10] val score: 2.19479 (0.03 mins)
     [cat model][Fold  2/10] val score: 2.04845 (0.05 mins)
     [cat model][Fold  3/10] val score: 1.81890 (0.05 mins)
-    [cat model][Fold  4/10] val score: 1.99653 (0.05 mins)
+    [cat model][Fold  4/10] val score: 1.99653 (0.03 mins)
     [cat model][Fold  5/10] val score: 1.64939 (0.05 mins)
-    [cat model][Fold  6/10] val score: 1.91005 (0.05 mins)
+    [cat model][Fold  6/10] val score: 1.91005 (0.07 mins)
     [cat model][Fold  7/10] val score: 1.98652 (0.05 mins)
-    [cat model][Fold  8/10] val score: 1.73573 (0.05 mins)
-    [cat model][Fold  9/10] val score: 1.75025 (0.05 mins)
+    [cat model][Fold  8/10] val score: 1.73573 (0.03 mins)
+    [cat model][Fold  9/10] val score: 1.75025 (0.03 mins)
     [cat model][Fold 10/10] val score: 2.01263 (0.05 mins)
     
     [cat model] val avg score: 1.91032 (0.53 mins)
@@ -2093,14 +2117,14 @@ movie_pred_vanilla.train(stacking=True, fit_params={"early_stopping_rounds": 500
     [xgb model][Fold  2/10] val score: 2.18585 (0.00 mins)
     [xgb model][Fold  3/10] val score: 1.83211 (0.00 mins)
     [xgb model][Fold  4/10] val score: 2.06447 (0.00 mins)
-    [xgb model][Fold  5/10] val score: 1.69255 (0.00 mins)
-    [xgb model][Fold  6/10] val score: 1.96922 (0.00 mins)
-    [xgb model][Fold  7/10] val score: 2.02238 (0.00 mins)
-    [xgb model][Fold  8/10] val score: 1.81279 (0.00 mins)
-    [xgb model][Fold  9/10] val score: 1.75044 (0.00 mins)
-    [xgb model][Fold 10/10] val score: 2.32899 (0.00 mins)
+    [xgb model][Fold  5/10] val score: 1.69255 (0.02 mins)
+    [xgb model][Fold  6/10] val score: 1.96922 (0.02 mins)
+    [xgb model][Fold  7/10] val score: 2.02238 (0.02 mins)
+    [xgb model][Fold  8/10] val score: 1.81279 (0.02 mins)
+    [xgb model][Fold  9/10] val score: 1.75044 (0.02 mins)
+    [xgb model][Fold 10/10] val score: 2.32899 (0.02 mins)
     
-    [xgb model] val avg score: 1.99173 (0.13 mins)
+    [xgb model] val avg score: 1.99173 (0.17 mins)
     [xgb model] test score: 2.08580
     
     [lgb model] start
@@ -2120,17 +2144,17 @@ movie_pred_vanilla.train(stacking=True, fit_params={"early_stopping_rounds": 500
     
     [cat model] start
     [cat model][Fold  1/10] val score: 2.38051 (0.27 mins)
-    [cat model][Fold  2/10] val score: 2.16901 (0.27 mins)
+    [cat model][Fold  2/10] val score: 2.16901 (0.25 mins)
     [cat model][Fold  3/10] val score: 1.84924 (0.28 mins)
     [cat model][Fold  4/10] val score: 2.08814 (0.28 mins)
     [cat model][Fold  5/10] val score: 1.71467 (0.27 mins)
-    [cat model][Fold  6/10] val score: 1.96541 (0.25 mins)
+    [cat model][Fold  6/10] val score: 1.96541 (0.28 mins)
     [cat model][Fold  7/10] val score: 1.99999 (0.28 mins)
     [cat model][Fold  8/10] val score: 1.82161 (0.27 mins)
-    [cat model][Fold  9/10] val score: 1.71226 (0.33 mins)
-    [cat model][Fold 10/10] val score: 2.31056 (0.33 mins)
+    [cat model][Fold  9/10] val score: 1.71226 (0.28 mins)
+    [cat model][Fold 10/10] val score: 2.31056 (0.27 mins)
     
-    [cat model] val avg score: 2.00114 (2.93 mins)
+    [cat model] val avg score: 2.00114 (2.83 mins)
     [cat model] test score: 2.02935
     
     [meta model] start
@@ -2304,8 +2328,7 @@ create_submission_files(movie_pred,prefix='tuned')
 
     env: SUBID=10
     env: FPREFIX=tuned
-    100%|████████████████████████████████████████| 100k/100k [00:03<00:00, 26.8kB/s]
-    Successfully submitted to TMDB Box Office Prediction
+
 
 ### Free-Form Visualization
 
@@ -2316,12 +2339,15 @@ Feature importances
 feature_importance = pd.DataFrame(index=movie_pred.data['train'].drop(['revenue'], axis=1).columns)
 
 fig, axes = plt.subplots(3, 1, figsize=(14,25))
-plt.gca().invert_yaxis()
+#plt.gca().invert_yaxis()
 for i,m in enumerate(movie_pred.MOD_CLASS['GBDT']):
     feature_importance[m] = movie_pred.models[m].feature_importances_
-    feature_importance[m].sort_values(ascending=False).head(30).plot(kind="barh",title = "Features Importance [{}]".format(m), ax=axes[i])
+    feature_importance[m].sort_values(ascending=False).head(30).plot(kind="barh", ax=axes[i])
     axes[i].invert_yaxis()
-
+    axes[i].set_title("Fig. {}. Features Importances [{} model]".format(i+11,m), fontweight="bold", y=-0.13)
+    axes[i].set_xlabel("Importance")
+    axes[i].set_ylabel("Features")
+    
 ```
 
 
