@@ -1,11 +1,21 @@
 # Machine Learning Engineer Nanodegree
-## Specializations
-## Project: Capstone Proposal and Capstone Project
+## Capstone Project
+## Movie Box Office Revenue Prediction with Stacked Gradient Boosting Models
+Daniel Tejeda  
 
-**Note**
+## Dataset
 
-The Capstone is a two-staged project. The first is the proposal component, where you can receive valuable feedback about your project idea, design, and proposed solution. This must be completed prior to your implementation and submitting for the capstone project. 
+The training and testing datasets for the TMDB Box Office Prediction can be downloaded from [Kaggle's competition webpage](https://www.kaggle.com/c/tmdb-box-office-prediction/data).
 
-You can find the [capstone proposal rubric here](https://review.udacity.com/#!/rubrics/410/view), and the [capstone project rubric here](https://review.udacity.com/#!/rubrics/108/view). Please ensure that you are following directions correctly before submitting these two stages which encapsulate your capstone.
+Note: The notebook assumes data files are stored in `./data/` directory.
 
-Please email [machine-support@udacity.com](mailto:machine-support@udacity.com) if you have any questions.
+## Requirements
+
+* Python >= 3.6
+* numpy >= 1.16.3
+* pandas >= 0.24.2
+* seaborn >= 0.9.0
+* scikit-learn >= 0.20.3
+* xgboost == 1.0.0
+* lightgbm == 2.2.3 
+* catboost == 0.17.3

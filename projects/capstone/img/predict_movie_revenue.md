@@ -42,7 +42,6 @@ import numpy as np
 import seaborn as sb
 import matplotlib.pyplot as plt
 
-#import visuals as vs
 import data_prep as dp
 import json
 from itertools import cycle, islice
@@ -60,13 +59,9 @@ import xgboost as xgb
 import lightgbm as lgb
 import catboost as cat
 import copy
-
+import itertools
 
 ```
-
-    The autoreload extension is already loaded. To reload it, use:
-      %reload_ext autoreload
-
 
 ## 1. Exploratory data analysis
 
@@ -325,10 +320,10 @@ original_datasets['train'].describe(include='all')
       <td>NaN</td>
       <td>[{'id': 18, 'name': 'Drama'}]</td>
       <td>http://www.transformersmovie.com/</td>
-      <td>tt1430132</td>
+      <td>tt0403358</td>
       <td>en</td>
-      <td>Red Dawn</td>
-      <td>During the U.S.-led occupation of Baghdad in 2...</td>
+      <td>The Gift</td>
+      <td>In December 1941, Czech soldiers Jozef Gabƒç√≠...</td>
       <td>NaN</td>
       <td>...</td>
       <td>9/10/15</td>
@@ -336,10 +331,10 @@ original_datasets['train'].describe(include='all')
       <td>[{'iso_639_1': 'en', 'name': 'English'}]</td>
       <td>Released</td>
       <td>Based on a true story.</td>
-      <td>Beauty and the Beast</td>
+      <td>Black Sheep</td>
       <td>[{'id': 10183, 'name': 'independent film'}]</td>
       <td>[]</td>
-      <td>[{'credit_id': '52fe4308c3a36847f8035533', 'de...</td>
+      <td>[{'credit_id': '52fe43639251416c7500e623', 'de...</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -822,7 +817,7 @@ sb.heatmap(quant_data.corr(), annot=True, square=True, linewidths=.5, cmap="YlGn
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x7f6a184b31d0>
+    <matplotlib.axes._subplots.AxesSubplot at 0x7fcaf71cc0f0>
 
 
 
@@ -1583,6 +1578,7 @@ ds_train.shape, ds_train.columns
 class MovieRevenuePredictor():
     
     MOD_CLASS = { 'BASE':      ['knn','xgb','lgb','cat'],
+                  'GBDT':       ['xgb','lgb','cat'],
                   'BENCHMARK': ['knn'] }
     
     def __init__(self, data, random_seed=1, splits=10, test_size=0.1, gridsearch=False): 
@@ -1866,8 +1862,8 @@ class MovieRevenuePredictor():
                 
         test_pred = self.predict_meta(test_data, stack=stack, **kwargs)
         
-        return { 'preds': test_pred, 
-                 'score': np.sqrt(mean_squared_log_error(test_pred, test_data['revenue'])) }
+        return { 'score': np.sqrt(mean_squared_log_error(test_pred, test_data['revenue'])),
+                 'preds': test_pred }
     
     
     def print_train_results(self):
@@ -1884,67 +1880,63 @@ class MovieRevenuePredictor():
             print("[{}] test score: {:.5f}\n".format(m, res['test']['score']))
     
         
-    
-    def get_best_meta_model(self):
-        pass
-        
-        
-        
 ```
+
+### Initialize MovieRevenuePredictor 
+
+The `movie_pred` instance will be the tuned one, we pass `gridsearch=True` so we do the grid search.
 
 
 ```python
 random_seed=681
 
 movie_pred = MovieRevenuePredictor(ds_train, random_seed=random_seed, splits=10, gridsearch=True)
-
 movie_pred.best_models
-#movie_pred.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbose": False });
 ```
 
     Fitting 3 folds for each of 27 candidates, totalling 81 fits
 
 
     [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   10.6s remaining:  1.1min
-    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   19.7s remaining:   59.9s
-    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   21.2s remaining:   38.1s
-    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   24.7s remaining:   27.9s
-    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   27.9s remaining:   20.2s
-    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   31.6s remaining:   14.1s
-    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   33.5s remaining:    8.2s
-    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   38.8s remaining:    3.7s
-    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   44.2s finished
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   10.5s remaining:  1.1min
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   19.4s remaining:   59.2s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   21.6s remaining:   38.7s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   24.9s remaining:   28.2s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   27.6s remaining:   20.0s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   31.2s remaining:   13.9s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   33.1s remaining:    8.1s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   39.2s remaining:    3.7s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   43.9s finished
 
 
     Fitting 3 folds for each of 27 candidates, totalling 81 fits
 
 
     [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:    1.4s remaining:    9.1s
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:    1.4s remaining:    9.0s
     [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:    1.5s remaining:    4.5s
-    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:    1.6s remaining:    2.8s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:    1.5s remaining:    2.7s
     [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:    1.7s remaining:    1.9s
-    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:    2.8s remaining:    2.1s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:    2.9s remaining:    2.1s
     [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:    2.9s remaining:    1.3s
     [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:    3.0s remaining:    0.7s
     [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:    3.1s remaining:    0.3s
-    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:    3.8s finished
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:    3.7s finished
 
 
     Fitting 3 folds for each of 27 candidates, totalling 81 fits
 
 
     [Parallel(n_jobs=-1)]: Using backend LokyBackend with 40 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   14.2s remaining:  1.5min
-    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   14.8s remaining:   45.0s
-    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   18.0s remaining:   32.2s
-    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   20.8s remaining:   23.5s
-    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   34.7s remaining:   25.1s
-    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   48.4s remaining:   21.6s
-    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   50.2s remaining:   12.4s
-    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   53.1s remaining:    5.0s
-    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   56.4s finished
+    [Parallel(n_jobs=-1)]: Done  11 out of  81 | elapsed:   14.1s remaining:  1.5min
+    [Parallel(n_jobs=-1)]: Done  20 out of  81 | elapsed:   14.6s remaining:   44.7s
+    [Parallel(n_jobs=-1)]: Done  29 out of  81 | elapsed:   18.6s remaining:   33.4s
+    [Parallel(n_jobs=-1)]: Done  38 out of  81 | elapsed:   21.0s remaining:   23.8s
+    [Parallel(n_jobs=-1)]: Done  47 out of  81 | elapsed:   34.6s remaining:   25.0s
+    [Parallel(n_jobs=-1)]: Done  56 out of  81 | elapsed:   47.8s remaining:   21.3s
+    [Parallel(n_jobs=-1)]: Done  65 out of  81 | elapsed:   49.7s remaining:   12.2s
+    [Parallel(n_jobs=-1)]: Done  74 out of  81 | elapsed:   53.3s remaining:    5.0s
+    [Parallel(n_jobs=-1)]: Done  81 out of  81 | elapsed:   56.8s finished
 
 
 
@@ -1965,7 +1957,7 @@ movie_pred.best_models
             random_state=None, reg_alpha=0.0, reg_lambda=0.0, silent=True,
             subsample=1.0, subsample_for_bin=200000, subsample_freq=0,
             use_best_model=True),
-     'cat': <catboost.core.CatBoostRegressor at 0x7f6a188a0908>}
+     'cat': <catboost.core.CatBoostRegressor at 0x7fcaf7a26400>}
 
 
 
@@ -1987,6 +1979,8 @@ movie_pred.best_models['cat'].get_params()
      'learning_rate': 0.1}
 
 
+
+### Train tuned models
 
 
 ```python
@@ -2040,18 +2034,18 @@ movie_pred.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbo
     [lgb model] test score: 1.99794
     
     [cat model] start
-    [cat model][Fold  1/10] val score: 2.19479 (0.05 mins)
+    [cat model][Fold  1/10] val score: 2.19479 (0.03 mins)
     [cat model][Fold  2/10] val score: 2.04845 (0.05 mins)
-    [cat model][Fold  3/10] val score: 1.81890 (0.07 mins)
+    [cat model][Fold  3/10] val score: 1.81890 (0.05 mins)
     [cat model][Fold  4/10] val score: 1.99653 (0.05 mins)
     [cat model][Fold  5/10] val score: 1.64939 (0.05 mins)
     [cat model][Fold  6/10] val score: 1.91005 (0.05 mins)
     [cat model][Fold  7/10] val score: 1.98652 (0.05 mins)
     [cat model][Fold  8/10] val score: 1.73573 (0.05 mins)
-    [cat model][Fold  9/10] val score: 1.75025 (0.07 mins)
+    [cat model][Fold  9/10] val score: 1.75025 (0.05 mins)
     [cat model][Fold 10/10] val score: 2.01263 (0.05 mins)
     
-    [cat model] val avg score: 1.91032 (0.58 mins)
+    [cat model] val avg score: 1.91032 (0.53 mins)
     [cat model] test score: 1.90409
     
     [meta model] start
@@ -2069,6 +2063,8 @@ movie_pred.train(stacking=True, fit_params={"early_stopping_rounds": 500, "verbo
     [meta model] val avg score: 1.89616 (0.00 mins)
     [meta model] test score: 1.89112
 
+
+### Train vanilla models
 
 
 ```python
@@ -2094,17 +2090,17 @@ movie_pred_vanilla.train(stacking=True, fit_params={"early_stopping_rounds": 500
     
     [xgb model] start
     [xgb model][Fold  1/10] val score: 2.25847 (0.00 mins)
-    [xgb model][Fold  2/10] val score: 2.18585 (0.02 mins)
-    [xgb model][Fold  3/10] val score: 1.83211 (0.02 mins)
-    [xgb model][Fold  4/10] val score: 2.06447 (0.02 mins)
-    [xgb model][Fold  5/10] val score: 1.69255 (0.02 mins)
-    [xgb model][Fold  6/10] val score: 1.96922 (0.02 mins)
-    [xgb model][Fold  7/10] val score: 2.02238 (0.02 mins)
-    [xgb model][Fold  8/10] val score: 1.81279 (0.02 mins)
-    [xgb model][Fold  9/10] val score: 1.75044 (0.02 mins)
-    [xgb model][Fold 10/10] val score: 2.32899 (0.02 mins)
+    [xgb model][Fold  2/10] val score: 2.18585 (0.00 mins)
+    [xgb model][Fold  3/10] val score: 1.83211 (0.00 mins)
+    [xgb model][Fold  4/10] val score: 2.06447 (0.00 mins)
+    [xgb model][Fold  5/10] val score: 1.69255 (0.00 mins)
+    [xgb model][Fold  6/10] val score: 1.96922 (0.00 mins)
+    [xgb model][Fold  7/10] val score: 2.02238 (0.00 mins)
+    [xgb model][Fold  8/10] val score: 1.81279 (0.00 mins)
+    [xgb model][Fold  9/10] val score: 1.75044 (0.00 mins)
+    [xgb model][Fold 10/10] val score: 2.32899 (0.00 mins)
     
-    [xgb model] val avg score: 1.99173 (0.17 mins)
+    [xgb model] val avg score: 1.99173 (0.13 mins)
     [xgb model] test score: 2.08580
     
     [lgb model] start
@@ -2123,18 +2119,18 @@ movie_pred_vanilla.train(stacking=True, fit_params={"early_stopping_rounds": 500
     [lgb model] test score: 2.01156
     
     [cat model] start
-    [cat model][Fold  1/10] val score: 2.38051 (0.28 mins)
-    [cat model][Fold  2/10] val score: 2.16901 (0.28 mins)
-    [cat model][Fold  3/10] val score: 1.84924 (0.30 mins)
-    [cat model][Fold  4/10] val score: 2.08814 (0.32 mins)
-    [cat model][Fold  5/10] val score: 1.71467 (0.30 mins)
-    [cat model][Fold  6/10] val score: 1.96541 (0.30 mins)
+    [cat model][Fold  1/10] val score: 2.38051 (0.27 mins)
+    [cat model][Fold  2/10] val score: 2.16901 (0.27 mins)
+    [cat model][Fold  3/10] val score: 1.84924 (0.28 mins)
+    [cat model][Fold  4/10] val score: 2.08814 (0.28 mins)
+    [cat model][Fold  5/10] val score: 1.71467 (0.27 mins)
+    [cat model][Fold  6/10] val score: 1.96541 (0.25 mins)
     [cat model][Fold  7/10] val score: 1.99999 (0.28 mins)
-    [cat model][Fold  8/10] val score: 1.82161 (0.28 mins)
-    [cat model][Fold  9/10] val score: 1.71226 (0.30 mins)
-    [cat model][Fold 10/10] val score: 2.31056 (0.27 mins)
+    [cat model][Fold  8/10] val score: 1.82161 (0.27 mins)
+    [cat model][Fold  9/10] val score: 1.71226 (0.33 mins)
+    [cat model][Fold 10/10] val score: 2.31056 (0.33 mins)
     
-    [cat model] val avg score: 2.00114 (2.98 mins)
+    [cat model] val avg score: 2.00114 (2.93 mins)
     [cat model] test score: 2.02935
     
     [meta model] start
@@ -2153,150 +2149,30 @@ movie_pred_vanilla.train(stacking=True, fit_params={"early_stopping_rounds": 500
     [meta model] test score: 2.00634
 
 
-
-```python
-movie_pred.test_meta()['score'], movie_pred_vanilla.test_meta()['score']
-```
-
-
-
-
-    (1.8911193639405444, 2.006337509637189)
-
-
+### Model Evaluation and Validation
 
 
 ```python
-add_feats=['log_budget', 'log_popularity']
+stacks = list(itertools.combinations(MovieRevenuePredictor.MOD_CLASS['GBDT'], 2)) #combinations
+stacks.append(MovieRevenuePredictor.MOD_CLASS['GBDT']) #all GBDT models
+stacks.append(MovieRevenuePredictor.MOD_CLASS['BASE']) #all models
 
-movie_pred.test_meta()['score'], movie_pred.test_meta(add_feats=add_feats)['score']
-```
-
-
-
-
-    (1.8911193639405444, 1.8911193639405444)
-
-
-
-
-```python
-stack=['xgb']
-add_feats=['log_budget', 'log_popularity']
-
-movie_reg.test_meta(stack=['xgb'])['score'], movie_reg.test_meta(stack=['xgb'], add_feats=add_feats)['score']
-```
-
-
-```python
-stack=['xgb','lgb']
-add_feats=['log_budget', 'log_popularity']
-
-movie_reg.test_meta(stack=stack)['score'], movie_reg.test_meta(stack=stack, add_feats=add_feats)['score']
-```
-
-
-```python
-stack=['xgb', 'cat']
-add_feats=['log_budget', 'log_popularity']
-
-movie_reg.test_meta(stack=stack)['score'], movie_reg.test_meta(stack=stack, add_feats=add_feats)['score']
-```
-
-
-```python
-stack=['xgb','lgb', 'cat']
-add_feats=['log_budget', 'log_popularity']
-
-movie_reg.test_meta(stack=stack)['score'], movie_reg.test_meta(stack=stack, add_feats=add_feats)['score']
-```
-
-
-```python
-movie_reg.test()
-```
-
-
-```python
-meta_preds = movie_reg.predict_meta(ds_test_kaggle)
-meta_preds.head()
-```
-
-
-```python
-meta_preds.to_csv("submission_stacked.csv")
-pd.read_csv("submission_stacked.csv".format(m)).head(5)
-```
-
-
-```python
-
-preds = movie_pred.predict(ds_test_kaggle)
-
-for m in preds: 
-    p = preds[[m]].rename(columns={m:'revenue'})
-    p.to_csv("submission_{}.csv".format(m))
-    print("submission_{}.csv\n{}\n".format(m, p.head()))
+def get_final_results(movie_predictor, name):
     
-meta_p = movie_pred.predict_meta(ds_test_kaggle)
+    results = movie_predictor.test()
+    res_df = pd.DataFrame(results).drop(['pred']) # base models
+    
+    for stack in stacks:
+        meta_res = movie_predictor.test_meta(stack=list(stack))
+        res_df.loc['score','_'.join(stack)] = meta_res['score']
+        
+    return res_df.rename(index={'score':name}, columns={c:'[{}]'.format(c) for c in res_df.columns})
 
-meta_p.to_csv("submission_stacked.csv")
+final_results = pd.concat([get_final_results(movie_pred_vanilla, 'vanilla'),
+                           get_final_results(movie_pred, 'tuned')], sort=False)
 
-pd.read_csv("submission_stacked.csv").head()
-
+final_results
 ```
-
-    submission_knn.csv
-               revenue
-    id                
-    3001  2.567042e+05
-    3002  1.629675e+07
-    3003  6.125836e+05
-    3004  2.830188e+06
-    3005  2.914570e+05
-    
-    submission_xgb.csv
-               revenue
-    id                
-    3001  8.748702e+06
-    3002  2.350722e+06
-    3003  3.401048e+06
-    3004  4.407317e+05
-    3005  1.418032e+06
-    
-    submission_lgb.csv
-               revenue
-    id                
-    3001  1.744732e+07
-    3002  5.312156e+06
-    3003  2.950232e+06
-    3004  5.375662e+05
-    3005  8.376373e+05
-    
-    submission_cat.csv
-               revenue
-    id                
-    3001  1.555703e+07
-    3002  8.976856e+05
-    3003  4.640500e+06
-    3004  2.067301e+06
-    3005  6.377184e+05
-    
-    
-    [meta model] start
-    [meta model][Fold  1/10] val score: 2.17808 (0.00 mins)
-    [meta model][Fold  2/10] val score: 2.01831 (0.00 mins)
-    [meta model][Fold  3/10] val score: 1.83880 (0.00 mins)
-    [meta model][Fold  4/10] val score: 2.00307 (0.00 mins)
-    [meta model][Fold  5/10] val score: 1.62782 (0.00 mins)
-    [meta model][Fold  6/10] val score: 1.87774 (0.00 mins)
-    [meta model][Fold  7/10] val score: 1.97089 (0.00 mins)
-    [meta model][Fold  8/10] val score: 1.70127 (0.00 mins)
-    [meta model][Fold  9/10] val score: 1.74193 (0.00 mins)
-    [meta model][Fold 10/10] val score: 2.00366 (0.00 mins)
-    
-    [meta model] val avg score: 1.89616 (0.00 mins)
-
 
 
 
@@ -2319,35 +2195,41 @@ pd.read_csv("submission_stacked.csv").head()
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>id</th>
-      <th>revenue</th>
+      <th>[knn]</th>
+      <th>[xgb]</th>
+      <th>[lgb]</th>
+      <th>[cat]</th>
+      <th>[xgb_lgb]</th>
+      <th>[xgb_cat]</th>
+      <th>[lgb_cat]</th>
+      <th>[xgb_lgb_cat]</th>
+      <th>[knn_xgb_lgb_cat]</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>3001</td>
-      <td>1.350291e+07</td>
+      <th>vanilla</th>
+      <td>2.6557</td>
+      <td>2.0858</td>
+      <td>2.01156</td>
+      <td>2.02935</td>
+      <td>2.014607</td>
+      <td>2.049722</td>
+      <td>1.991545</td>
+      <td>2.006726</td>
+      <td>2.006338</td>
     </tr>
     <tr>
-      <th>1</th>
-      <td>3002</td>
-      <td>1.291857e+06</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3003</td>
-      <td>4.205988e+06</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3004</td>
-      <td>1.124882e+06</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>3005</td>
-      <td>8.368326e+05</td>
+      <th>tuned</th>
+      <td>2.6557</td>
+      <td>1.93643</td>
+      <td>1.99794</td>
+      <td>1.90409</td>
+      <td>1.926032</td>
+      <td>1.891558</td>
+      <td>1.900557</td>
+      <td>1.891551</td>
+      <td>1.891119</td>
     </tr>
   </tbody>
 </table>
@@ -2355,118 +2237,98 @@ pd.read_csv("submission_stacked.csv").head()
 
 
 
+### Kaggle scoring
+
 
 ```python
+#Kaggle submission to get additional score
+def create_submission_files(movie_predictor, prefix='submission'):
+    
+    preds_kaggle = movie_predictor.predict(ds_test_kaggle)
+    
+    for m in preds_kaggle: 
+        p = preds_kaggle[[m]].rename(columns={m:'revenue'})
+        fname = "{}_{}.csv".format(prefix, m)
+        p.to_csv(fname)
+        print(fname)
 
-#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_knn.csv -m "knn_f3"
-#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_xgb.csv -m "xgb_f4"
-#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_lgb.csv -m "lgb_f3"
-#!kaggle competitions submit -c tmdb-box-office-prediction -f submission_cat.csv -m "cat_f3"
+    for stack in stacks:
+        meta_p_kaggle = movie_predictor.predict_meta(ds_test_kaggle, stack=list(stack))
+        fname = "{}_stack_{}.csv".format(prefix, '_'.join(stack))
+        meta_p_kaggle.to_csv(fname)
+        print(fname)
 
-!kaggle competitions submit -c tmdb-box-office-prediction -f submission_stacked.csv -m "stacked_f5"
+
+create_submission_files(movie_pred_vanilla,prefix='vanilla')
+create_submission_files(movie_pred,prefix='tuned')
+```
+
+    vanilla_knn.csv
+    vanilla_xgb.csv
+    vanilla_lgb.csv
+    vanilla_cat.csv
+    vanilla_stack_xgb_lgb.csv
+    vanilla_stack_xgb_cat.csv
+    vanilla_stack_lgb_cat.csv
+    vanilla_stack_xgb_lgb_cat.csv
+    vanilla_stack_knn_xgb_lgb_cat.csv
+    tuned_knn.csv
+    tuned_xgb.csv
+    tuned_lgb.csv
+    tuned_cat.csv
+    tuned_stack_xgb_lgb.csv
+    tuned_stack_xgb_cat.csv
+    tuned_stack_lgb_cat.csv
+    tuned_stack_xgb_lgb_cat.csv
+    tuned_stack_knn_xgb_lgb_cat.csv
+
+
+
+```python
+%env SUBID=10
+%env FPREFIX=tuned
+
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_knn.csv -m "knn_$(echo $SUBID)"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_xgb.csv -m "xgb_$(echo $SUBID)"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_lgb.csv -m "lgb_$(echo $SUBID)"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_cat.csv -m "cat_$(echo $SUBID)"
+
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_stack_xgb_lgb.csv -m "stack_xgb+lgb_$(echo $SUBID)"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_stack_xgb_cat.csv -m "stack_xgb+cat_$(echo $SUBID)"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_stack_lgb_cat.csv -m "stack_lgb+cat_$(echo $SUBID)"
+
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_stack_xgb_lgb_cat.csv -m "stack_xgb+lgb+cat_$(echo $SUBID)"
+#!kaggle competitions submit -c tmdb-box-office-prediction -f $(echo $FPREFIX)_stack_knn_xgb_lgb_cat.csv -m "stack_knn+xgb+lgb+cat_$(echo $SUBID)"
 
 ```
 
-    100%|████████████████████████████████████████| 100k/100k [00:02<00:00, 42.8kB/s]
+    env: SUBID=10
+    env: FPREFIX=tuned
+    100%|████████████████████████████████████████| 100k/100k [00:03<00:00, 26.8kB/s]
     Successfully submitted to TMDB Box Office Prediction
 
+### Free-Form Visualization
+
+Feature importances
+
 
 ```python
+feature_importance = pd.DataFrame(index=movie_pred.data['train'].drop(['revenue'], axis=1).columns)
 
-def test_meta_model(data, stack=movie_reg.BASE_MODELS, **kwargs):
+fig, axes = plt.subplots(3, 1, figsize=(14,25))
+plt.gca().invert_yaxis()
+for i,m in enumerate(movie_pred.MOD_CLASS['GBDT']):
+    feature_importance[m] = movie_pred.models[m].feature_importances_
+    feature_importance[m].sort_values(ascending=False).head(30).plot(kind="barh",title = "Features Importance [{}]".format(m), ax=axes[i])
+    axes[i].invert_yaxis()
 
-    train_set = copy.deepcopy(movie_reg.data['train_meta'])
-    train_set[['revenue', *stack]] = np.log1p(train_set[['revenue', *stack]])
-    
-    x_train_meta = train_set[stack]
-    y_train_meta = train_set['revenue']
-
-    model = LinearRegression()
-    model.fit(x_train_meta, y_train_meta)
-    
-    test_set = pd.DataFrame(data=data, columns=movie_reg.data['train_meta'].columns).fillna(0)
-    #addfeats = movie_reg.predict(models=stack, X=data)           
-
-    test_set[stack] = movie_reg.predict(models=stack, X=data) 
-    test_set[['revenue', *stack]] = np.log1p(test_set[['revenue', *stack]])
-
-    x_test_meta = test_set[stack]
-    y_test_meta = test_set['revenue']
-
-    test_pred = model.predict(x_test_meta)
-
-    return { 'preds': pd.DataFrame(np.expm1(test_pred), index=data.index, columns=['revenue']), 'score': np.sqrt(mean_squared_error(test_pred, y_test_meta)) }
-    
-    
-test_meta_model(movie_reg.data['test'])['score']
-
-#test_set[addfeats.columns].assign(revenue=test_set['revenue'].values), movie_reg.data['train_meta'][[*addfeats.columns, 'revenue']]
 ```
 
 
-```python
-from sklearn.linear_model import SGDRegressor
+![png](output_49_0.png)
 
-#model = SGDRegressor(loss='squared_loss', learning_rate='adaptive', random_state=2019)
-
-#TODO: log1p to X too
-X = movie_reg.data['train_meta'][movie_reg.GB_MODELS]
-y = np.log1p(movie_reg.data['train_meta']['revenue'])
-
-#model.fit(X, y)
-
-from sklearn.metrics import make_scorer
-from sklearn.model_selection import GridSearchCV, ShuffleSplit
-from sklearn.metrics import mean_squared_error
-
-reg = LinearRegression(random_state=movie_reg.random_seed, max_iter=1000, tol=None)
-
-parameters = { 'penalty': ['none', 'l2', 'l1', 'elasticnet'],  'max_iter':[1000], 'tol':[None]}
-
-scorer = make_scorer(mean_squared_error)
-
-cv_sets = ShuffleSplit(n_splits = 10, test_size = 0.20, random_state = movie_reg.random_seed)
-
-grid_obj = GridSearchCV(reg, parameters, scoring=scorer, cv=cv_sets)
-
-grid_fit = grid_obj.fit(X, y)
-
-best_reg = grid_fit.best_estimator_
-best_reg
-
-```
-
-## 3. Train the KNN benchmark model based on budget, popularity and runtime
 
 
 ```python
-# remove table meta data, column names etc. 
-X = all_data[['log_budget','log_popularity','log_runtime']].values
-y = all_data[['revenue']].values
 
-# create Validation Split
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.01, random_state=16)
-
-# scale
-X_scaler = StandardScaler()
-X_train_scaled  = X_scaler.fit_transform(X_train)
-X_val_scaled    = X_scaler.transform(X_val)
-
-y_train_scaled = np.log1p(y_train)
-
-#create regressor, fit the data
-reg = KNeighborsRegressor().fit(X_train_scaled, y_train_scaled)
-
-#define score function
-def score_function(y_true, y_pred):
-    return np.sqrt(mean_squared_log_error(y_true, y_pred))
-
-# apply the regression model on the prepared train, validation and test set and invert the logarithmic scaling
-y_train_pred  = np.expm1(reg.predict(X_train_scaled))
-y_val_pred    = np.expm1(reg.predict(X_val_scaled))
-#y_test_pred   = inverseY(reg.predict(X_test_scaled))
-
-# print the RMLS error on training & validation 
-print("RMLS Error on Training Dataset:\t", score_function(y_train , y_train_pred), score_function(y_train, y_train_pred))
-print("RMLS Error on Val Dataset:\t", score_function(y_val , y_val_pred), score_function(y_val , y_val_pred))
 ```
